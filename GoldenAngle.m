@@ -17,7 +17,8 @@ function [MR,P] = GoldenAngle(varargin);
 % 
 % P.sensitivitymaps     %true/false use of sense maps for coil combinations
 % P.sensitvitymapscalc  %way of calculating sensitivity maps: sense (standard)/espirit
-% P.dynamicespirit      %true(4D)/false(3D)
+% P.dynamicespirit      %true(4D)/false(3D) (TO DO put in espiritoptions!)
+% P.espiritoptions.nmaps %number of maps to compute and use
 % 
 % P.channelcompression  %true/false: standard false
 % P.cc_nrofchans        %number of channels used for compression
@@ -28,6 +29,8 @@ function [MR,P] = GoldenAngle(varargin);
 % empty=all slices (only for 4D and 5D)
 % P.CS.iter
 % P.CS.reg
+
+
 
 % P.binparams           %structure of parameters to use for binning (see
 % ksp2frames)

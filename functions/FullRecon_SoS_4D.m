@@ -28,7 +28,8 @@ for slice=P.reconslices
         else
             nufft=bart('nufft -i -t',coordsfull,permute(MR.Data(:,:,slice,:),[3 1 2 4]));
             lowres_ksp=bart('fft -u 7',nufft);
-            sensbart=bart('ecalib -r15 -S -m1',lowres_ksp);
+            sensoptions=['ecalib -r15 -S -m',num2str(P.espiritoptions.nmaps)]
+            sensbart=bart(sensoptions,lowres_ksp);
 %             nufftcc=bart('rss 8',nufft.*sensbart); %combine coils for nufft recon
         end
     else

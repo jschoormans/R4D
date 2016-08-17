@@ -94,6 +94,14 @@ if ~isfield(P,'oneTEtemp')
    P.oneTEtemp=false; 
 end
     
+if ~isfield(P,'espiritoptions')
+    P.espiritoptions=struct;
+end
+
+if ~isfield(P.espiritoptions,'nmaps')
+   P.espiritoptions.nmaps=1; 
+end
+
 
 
 

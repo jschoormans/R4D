@@ -44,6 +44,10 @@ end
 
 if P.oneTEtemp ==true;
     MR.Parameter.Parameter2Read.echo=[0]
+else
+    if strcmp(P.recontype,'4D')==true; %automatically use ONLY first echo for 4D recon;
+            MR.Parameter.Parameter2Read.echo=[0]
+    end
 end
 
 

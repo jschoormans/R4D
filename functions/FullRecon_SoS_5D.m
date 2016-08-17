@@ -3,18 +3,18 @@ P=checkGAParams(P);
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 
 P.nEchoes=MR.Parameter.Encoding.NrEchoes;
+res=MR.Parameter.Encoding.XRes(1);
+reco_cs=zeros(res,res,length(P.reconslices),P.binparams.nBins,P.nEchoes);
 
 for TE=1:P.nEchoes
 P.TE=TE;
 [MR,P,ku,kdatau,k]=FullRecon_SoS_5D_init(P);
 
 %% BART CS
-res=MR.Parameter.Encoding.XRes(1);
 pause(5);
 coords=RadTraj2BartCoords(ku,res);
 coordsfull=RadTraj2BartCoords(k,res);
 %
-reco_cs=zeros(res,res,length(P.reconslices),P.binparams.nBins);
 for slice=P.reconslices
     fprintf('Recon slice %d of %d.',slice,size(kdatau,3))
     ksp_acq=(kdatau(:,:,slice,:,:));

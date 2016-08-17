@@ -47,6 +47,7 @@ classdef GoldenAngle_Recon < MRecon
             anglesrad=mod(angles,2*pi);
             cksp=floor(size(MR.Data,1)/2)+1; %how to find it generally?
             
+            for nechoes=1:size(MR.Data,7)
             for nc=1:size(MR.Data,4)
                 for nz=floor(size(MR.Data,3)/2)+1;
                     y=unwrap(angle(MR.Data(cksp,:,nz,nc))); %phase of center of k-space (with corrected k: find closest to zero?!?!)
@@ -54,8 +55,9 @@ classdef GoldenAngle_Recon < MRecon
                     x=[ones(size(anglesrad))',Gx.*cos(anglesrad'),Gy.*sin(anglesrad')];
                     beta=inv(x'*x)*x'*y';
                     phiec=(beta(2)*cos(angles)+beta(3)*sin(angles));
-                    kspcorr(:,:,:,nc)=((MR.Data(:,:,:,nc))).*repmat(exp(-1i.*phiec),[size(MR.Data,1) 1 size(MR.Data,3)]);
+                    kspcorr(:,:,:,nc,1,1,nechoes)=((MR.Data(:,:,:,nc))).*repmat(exp(-1i.*phiec),[size(MR.Data,1) 1 size(MR.Data,3)]);
                 end
+            end
             end
             MR.Data=kspcorr;
         end

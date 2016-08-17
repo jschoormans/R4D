@@ -1,6 +1,12 @@
 function [MR,P]=FullRecon_SoS_5D(P)
+P=checkGAParams(P);
+MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 
-[MR,P,ku,kdatau,k]=FullRecon_SoS_4D_init(P);
+P.nEchoes=MR.Parameter.Encoding.NrEchoes;
+
+for TE=1:P.nEchoes
+P.TE=TE;
+[MR,P,ku,kdatau,k]=FullRecon_SoS_5D_init(P);
 
 %% BART CS
 res=MR.Parameter.Encoding.XRes(1);
@@ -8,6 +14,7 @@ pause(5);
 coords=RadTraj2BartCoords(ku,res);
 coordsfull=RadTraj2BartCoords(k,res);
 %
+reco_cs=zeros(res,res,length(P.reconslices),P.binparams.nBins);
 for slice=P.reconslices
     fprintf('Recon slice %d of %d.',slice,size(kdatau,3))
     ksp_acq=(kdatau(:,:,slice,:,:));
@@ -23,19 +30,20 @@ for slice=P.reconslices
                 sensbart(:,:,:,:,t)=bart('ecalib -r15 -S -m1',lowres_ksp);
             end
             sensbart=permute(sensbart,[1 2 3 4 6 7 8 9 10 11 5]);
-            nufftcc(:,:,slice,:)=bart('rss 8',nufft.*sensbart); %combine coils for nufft recon
+%             dummy=squeeze(bart('rss 8',nufft.*sensbart)); %combine coils for nufft recon
+%             nufftcc(:,:,slice,:)=permute(dummy,[1 2 4 3]);
         else
             nufft=bart('nufft -i -t',coordsfull,permute(MR.Data(:,:,slice,:),[3 1 2 4]));
             lowres_ksp=bart('fft -u 7',nufft);
             sensbart=bart('ecalib -r15 -S -m1',lowres_ksp);
-            nufftcc=bart('rss 8',nufft.*sensbart); %combine coils for nufft recon
+%             nufftcc=bart('rss 8',nufft.*sensbart); %combine coils for nufft recon
         end
     else
         error('Error: sensitvity maps calculation unknown/not recognized')
     end
-        
+    
     bartoptions=['pics -S -d5 -RT:1024:0:',num2str(P.CS.reg), ' -i',num2str(P.CS.iter),' -t'];
-    reco_cs(:,:,slice,:,:,:,:,:,:,:,:) = bart(bartoptions, coords, ksp_acq_t, sensbart);
+    reco_cs(:,:,slice,:,TE) = squeeze(bart(bartoptions, coords, ksp_acq_t, sensbart));
 %   reco_cs=bart('rss 8',reco_cs);
 
 
@@ -45,10 +53,12 @@ for slice=P.reconslices
         nii=make_nii(abs(permute(flip(squeeze(reco_cs),1),[2 1 3 4 5])),voxelsize,[],[],'');
         save_nii(nii,strcat(P.filename,'.nii'))
 
-        nii=make_nii(abs(permute(flip(squeeze(nufftcc),1),[2 1 3 4 5])),voxelsize,[],[],'');
-        save_nii(nii,strcat(P.filename,'NUFFT.nii'))
+%         nii=make_nii(abs(permute(flip(squeeze(nufftcc),1),[2 1 3 4 5])),voxelsize,[],[],'');
+%         save_nii(nii,strcat(P.filename,'NUFFT.nii'))
     end
 
+
+end
 
 end
 

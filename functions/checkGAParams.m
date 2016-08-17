@@ -90,6 +90,9 @@ if ~isfield(P.CS,'reg')
     P.CS.reg=0.002;
 end
 
+if ~isfield(P,'oneTEtemp')
+   P.oneTEtemp=false; 
+end
     
 
 

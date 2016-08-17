@@ -9,11 +9,15 @@ fileID=fopen([P.filename,'.txt'],'w');
 fprintf(fileID,'TO DO: fix printing of parameters to text file');
 fclose(fileID);
 
+
+if strcmp(P.recontype,'3D')
 fprintf('Saving NIFTI...\n')
 %save to NIFTI
 voxelsize=MR.Parameter.Scan.AcqVoxelSize;
 nii=make_nii(abs(MR.Data),voxelsize,[],[],'');
 save_nii(nii,strcat(P.filename,'.nii'))
+end
+
 fprintf('Golden-angle Stack-of-Stars Finished!\n')
 
 end

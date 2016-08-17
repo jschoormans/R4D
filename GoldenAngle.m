@@ -29,9 +29,9 @@ function [MR,P] = GoldenAngle(varargin);
 % P.CS.iter
 % P.CS.reg
 
-
 % P.binparams           %structure of parameters to use for binning (see
 % ksp2frames)
+
 
 % TO DO IN FUTURE (IDEAS)
 % P.DCEsettings %settings for DCE recons

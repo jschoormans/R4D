@@ -7,6 +7,7 @@ pause(5);
 coords=RadTraj2BartCoords(ku,res);
 coordsfull=RadTraj2BartCoords(k,res);
 %
+reco_cs=zeros(res,res,length(P.reconslices),P.binparams.nBins);
 for slice=P.reconslices
     fprintf('Recon slice %d of %d.',slice,size(kdatau,3))
     ksp_acq=(kdatau(:,:,slice,:,:));

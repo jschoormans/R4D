@@ -8,7 +8,7 @@ pause(5);
 coords=RadTraj2BartCoords(ku,res);
 coordsfull=RadTraj2BartCoords(k,res);
 %
-for slice=1:size(kdatau,3)
+for slice=P.reconslices
     fprintf('Recon slice %d of %d.',slice,size(kdatau,3))
     ksp_acq=(kdatau(:,:,slice,:,:));
     ksp_acq_t=permute(ksp_acq,[3 1 2 4 6 7 8 9 10 11 5]);
@@ -33,8 +33,9 @@ for slice=1:size(kdatau,3)
     else
         error('Error: sensitvity maps calculation unknown/not recognized')
     end
-    
-    reco_cs(:,:,slice,:,:,:,:,:,:,:,:) = bart('pics -S -d5 -RT:1024:0:0.002 -i250 -t', coords, ksp_acq_t, sensbart);
+        
+    bartoptions=['pics -S -d5 -RT:1024:0:',num2str(P.CS.reg), ' -i',num2str(P.CS.iter),' -t'];
+    reco_cs(:,:,slice,:,:,:,:,:,:,:,:) = bart(bartoptions, coords, ksp_acq_t, sensbart);
 %   reco_cs=bart('rss 8',reco_cs);
 
 

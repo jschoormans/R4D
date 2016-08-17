@@ -13,7 +13,7 @@ function [MR,P] = GoldenAngle(varargin);
 % P.coil_survey         %filename of coil_survey file
 % P.sense_ref           %filename of sense_ref file
 % 
-% P.recontype           %'3D'; 'DCE'; '4D' (standard:3D)
+% P.recontype           %'3D'; 'DCE'; '4D' ; '5D'(multiple echoes)  (standard:3D)
 % 
 % P.sensitivitymaps     %true/false use of sense maps for coil combinations
 % P.sensitvitymapscalc  %way of calculating sensitivity maps: sense (standard)/espirit
@@ -24,6 +24,11 @@ function [MR,P] = GoldenAngle(varargin);
 % P.spokestoread        %vector specifiying channel numbers to use (standard:all)
 % P.channelstoread      %vector specifying spokes to read (standard:all)
 % P.reconresolution     %vector of matrix size (x,y,z)
+% P.reconslices=[vector] %vector of slices to reconstruct (1 to max)
+% empty=all slices (only for 4D and 5D)
+% P.CS.iter
+% P.CS.reg
+
 
 % P.binparams           %structure of parameters to use for binning (see
 % ksp2frames)
@@ -66,6 +71,9 @@ switch P.recontype
     case '4D';  disp('4D reconstruction');
         [MR,P]=FullRecon_SoS_4D(P);
     case 'DCE'; disp('DCE reconstruction (not yet implemented...');
+        
+    case '5D';  disp('5D reconstruction (multiple echoes)');
+        [MR,P]=FullRecon_SoS_5D(P);
         
     case '3D';  disp('Performing full 3D golden angle stack-of-stars reconstruction...');
         [MR,P]=FullRecon_SoS_3D(P);

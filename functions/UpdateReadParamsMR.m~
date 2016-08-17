@@ -26,11 +26,8 @@ if isfield(P,'reconresolution');
 end
 
 if isfield(P,'reconslices'); %check if reconslices are given
-    if max(P.reconslices)>round(MR.Parameter.Encoding.ZRes.*MR.Parameter.Encoding.KzOversampling)
-    error('there are not so many slices')
-    end
 else %given recon slices (mind oversampling!)
-    P.reconslices=[1:round(MR.Parameter.Encoding.ZRes.*MR.Parameter.Encoding.KzOversampling)] 
+    P.reconslices=[1:max] 
 end
 
 

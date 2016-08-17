@@ -1,0 +1,58 @@
+function [MR,P]=FullRecon_SoS_DCE(P)
+P=checkGAParams(P)
+
+MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
+%PARAMETERS
+[MR,P] = UpdateReadParamsMR(MR,P);
+
+%SENSITVITIES
+if P.sensitivitymaps == true
+    P.senseLargeOutput=1;
+    run FullRecon_SoS_sense.m;
+    if strcmp(P.sensitvitymapscalc,'sense')==1
+        sens=MR_sense.Sensitivity;
+        clear MR_sense;
+    end
+end
+
+%%%
+MR.Perform1;    %reading and sorting data
+MR.CalculateAngles;
+MR.PhaseShift;
+MR.Data=ifft(MR.Data,[],3); %eventually: remove slice oversampling
+[nx,ntviews,ny,nc]=size(MR.Data);
+goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+
+%%%SORTING
+disp('Sorting data into timeframes...')
+frames=[1:1:min(nframes,floor(size(MR.Data,2)/nspokes))]; %frames to include in analysis
+kdata=squeeze(MR.Data(:,:,:,:,1)); %select kdata for slice
+wfull=calcDCF(k,ImSize);
+
+nt=floor(ntviews/nspokes); % calculate (max) number of frames
+kdatac=kdata(:,1:nt*nspokes,:,:); % crop the data according to the number of spokes per frame
+for ii=1:nt % sort the data into a time-series (maybe remove loop at later stage)
+    kdatau(:,:,:,:,ii)=kdatac(:,(ii-1)*nspokes+1:ii*nspokes,:,:); %kdatau now (nfe nspoke nslice nc nt)
+    ku(:,:,ii)=double(k(:,(ii-1)*nspokes+1:ii*nspokes));
+    anglesu(:,:,ii)=angles(1,(ii-1)*nspokes+1:ii*nspokes);
+end
+wu=getRadWeightsGA(ku);
+
+%%% first guesses
+parfor selectslice=1:size(kdatau,3)
+    selectslice 
+    tempy=double(squeeze(kdatau(:,:,selectslice,:,frames))).*permute(repmat(sqrt(wu(:,:,frames)),[1 1 1 nc]),[1 2 4 3]);
+    tempE=MCNUFFT(ku(:,:,frames),sqrt(wu(:,:,frames)),squeeze(sens(:,:,selectslice,:))); %%?????? FOV ENLARGE?!?!!?!?
+    recon_guess(:,:,selectslice,:)=(tempE'*tempy);
+end
+recon_guess(isnan(recon_guess))=0;
+
+
+clear kdatac kdata;  %free up memory
+P.lamba = 0.25*max(abs(recon_guess(:))); %CS-parameter: higher: TV-temp more important, lower: data consistency more important
+
+
+disp('TO DO... REST OF DCE CODE AND MAKE INTERCOMPATIBLE WITH 4D')
+
+end

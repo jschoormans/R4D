@@ -28,7 +28,7 @@ for slice=P.reconslices
         else
             nufft=bart('nufft -i -t',coordsfull,permute(MR.Data(:,:,slice,:),[3 1 2 4]));
             lowres_ksp=bart('fft -u 7',nufft);
-            sensoptions=['ecalib -r15 -S -m',num2str(P.espiritoptions.nmaps)]
+            sensoptions=['ecalib -r25 -S -m',num2str(P.espiritoptions.nmaps)]
             sensbart=bart(sensoptions,lowres_ksp);
 %             nufftcc=bart('rss 8',nufft.*sensbart); %combine coils for nufft recon
         end
@@ -37,8 +37,12 @@ for slice=P.reconslices
     end
     
     bartoptions=['pics -S -d5 -RT:1024:0:',num2str(P.CS.reg), ' -i',num2str(P.CS.iter),' -t'];
-    reco_cs(:,:,slice,:) = squeeze(bart(bartoptions, coords, ksp_acq_t, sensbart));
-%   reco_cs=bart('rss 8',reco_cs);
+    
+    dummy=bart(bartoptions, coords, ksp_acq_t, sensbart);
+    dummy=bart('rss 16',dummy);
+    reco_cs(:,:,slice,:)=squeeze(dummy);
+%     reco_cs(:,:,slice,:,:) = squeeze(bart(bartoptions, coords, ksp_acq_t, sensbart));
+%   reco_cs=;
 
 
     if true

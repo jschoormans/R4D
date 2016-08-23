@@ -1,6 +1,5 @@
-% PRINCIPAL COMPONENT ANALYSIS
-
-function [gating_signal2,W] = ICA_gating_signal(ksp2,params)
+ 
+function [gating_signal2,W] = PCA_ICA_gating_signal(ksp2,params)
 
 % for chan=1:params.nc;
 % gating_signal(chan,:)=sum(abs(ksp2(params.cksp,:,:,chan)),3);
@@ -21,13 +20,42 @@ end
 %reshape gating_signal
 gating_signal=reshape(gating_signal,[size(gating_signal,1)*size(gating_signal,2)*size(gating_signal,3),params.nspokes]);
 
+% remove the mean variable-wise (row-wise)
+data=gating_signal';
+size(repmat(mean(data,1),[size(data,1) 1]));
+data=data-repmat(mean(data,1),[size(data,1) 1]);
 
-nICA=3;
-[W] = myICA(gating_signal(100:120,:),nICA);
-figure(99);hold on ; for i=1:nICA;plot(W(i,:)'+3*i);end
+%scale by sigma
+Vardata=std(data);
+data=data./repmat(Vardata,[params.nspokes 1]);
+
+
 
 if params.visualize==1;
-figure(992); imshow(gating_signal.',[]); title('input data for ICA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
+figure(992); imshow(data,[]); title('input data for PCA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
+
+% calculate eigenvectors (loadings) W, and eigenvalues of the covariance matrix
+[W, EvalueMatrix] = eig(cov(data'));
+Evalues = diag(EvalueMatrix);
+
+% order by largest eigenvalue
+Evalues = Evalues(end:-1:1);
+W = W(:,end:-1:1); W=W';
+%% take first n princpal components
+PCAVar=0.9;
+
+idx=find((cumsum(Evalues)./sum(Evalues))>PCAVar);
+nPCA=idx(1);
+gating_signal=W(1:nPCA,:);
+
+%% do ICA
+
+if params.visualize==1;
+figure(994); imshow(gating_signal.',[]); title('input data for ICA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
+
+
+nICA=20;
+[W] = myICA(gating_signal,nICA);
 
 
 
@@ -44,10 +72,13 @@ freqs=linspace(-0.5,0.5,length(W(1,:)))*params.Fs;
 FW=abs(fftshift(fft(W,[],2),2));
 
 bandfreqs= (freqs < params.PCAfreqband(2)).*(freqs > params.PCAfreqband(1));
+outbandfreqs= (freqs < params.PCAfreqband(1))+(freqs > params.PCAfreqband(2));
 
 EnergyIC=sum(FW(:,logical(bandfreqs)).^2,2);
+EnergyIC_outband=sum(FW(:,logical(outbandfreqs)).^2,2);
+RelEnergy=EnergyIC./EnergyIC_outband;
 
-[~,indexPC]=sort(EnergyIC,'descend');
+[~,indexPC]=sort(RelEnergy,'descend');
 PCA_choice=indexPC(1);
 
 if isfield(params,'PCA_PCnr'); %if specified; use certain PC instead of the one with max energy (temporary option?)
@@ -63,12 +94,12 @@ if params.visualize==1;
     for ii=1:nICA;
         tvector=linspace(0,params.nspokes/params.Fs,params.nspokes);
         plot(tvector,(ii*4)+W(ii,:));
-        text(tvector(5),(ii*4-(2)),['Principal component ',num2str(ii),', Energy in f-band :' ,num2str(EnergyIC(ii))])
+        text(tvector(5),(ii*4-(2)),['Independent component ',num2str(ii),', Rel. Energy in f-band :' ,num2str(RelEnergy(ii))])
         if ii==PCA_choice;
-           text(tvector(end),4*ii,'chosen PC') 
+           text(tvector(end),4*ii,'chosen IC') 
         end
     end
-    title('PCA analysis: first 10 independent components')
+    title('ICA analysis: first n independent components')
     xlabel('time (s)')
     ylabel('')
     hold off

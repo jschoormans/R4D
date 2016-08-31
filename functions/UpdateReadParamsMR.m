@@ -30,7 +30,9 @@ if isfield(P,'reconslices'); %check if reconslices are given
     error('there are not so many slices')
     end
 else %given recon slices (mind oversampling!)
-    P.reconslices=[1:round(MR.Parameter.Encoding.ZRes.*MR.Parameter.Encoding.KzOversampling)] 
+    zdim=MR.Parameter.Encoding.ZRes(1).*MR.Parameter.Encoding.KzOversampling(1);
+    os_slices=round(zdim-MR.Parameter.Encoding.ZRes(1));
+    P.reconslices=[1+floor(os_slices/2):floor(os_slices/2)+MR.Parameter.Encoding.ZRes] 
 end
 
 

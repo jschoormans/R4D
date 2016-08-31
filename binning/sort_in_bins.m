@@ -4,16 +4,18 @@ switch params.sortingmethod
     case 'v' %value (VERY TEMP!)
         [kdatau,ku,phaseval,indexphase] = sort_in_bins_value(gating_signal,ksp2,k,params);
         
+        
+    case 'v2' %value (VERY TEMP!)
+        [kdatau,ku,phaseval,indexphase] = sort_in_bins_value2(gating_signal,ksp2,k,params);
+        
     case 'p' %phase
         [kdatau,ku,phaseval,indexphase] = sort_in_bins_phase(gating_signal,ksp2,k,params);
         
     case 'p2' %phase2
         [kdatau,ku,phaseval,indexphase] = sort_in_bins_phase2(gating_signal,ksp2,k,params);
         
-    otherwise
+    otherwise        
         error('sortingmethod unknown!')
 end
-
-
 
 end

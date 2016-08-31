@@ -46,6 +46,9 @@ function [MR,P] = GoldenAngle(varargin);
 % tryto add weights to bart CS
 % Remove slice oversampling 
 % maybe build in DCE in 4D part instead of into NUFFT?
+% add interpolation to finer resolution in last step
+% m2 binning
+% automatic coil selection (remove noise-only coils robustly)
 
 disp('--------------------------------------------------------------')
 disp(' _____       _     _             ___              _      ')

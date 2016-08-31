@@ -41,7 +41,7 @@ for slice=P.reconslices
     dummy=bart(bartoptions, coords, ksp_acq_t, sensbart);
     dummy=bart('rss 16',dummy);
     reco_cs(:,:,slice,:)=squeeze(dummy);
-%     reco_cs(:,:,slice,:,:) = squeeze(bart(bartoptions, coords, ksp_acq_t, sensbart));
+%   reco_cs(:,:,slice,:,:) = squeeze(bart(bartoptions, coords, ksp_acq_t, sensbart));
 %   reco_cs=;
 
 

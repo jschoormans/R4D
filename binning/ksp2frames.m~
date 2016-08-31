@@ -56,10 +56,7 @@ if ~isfield(params,'nBins'); params.nBins=6'; disp('Warning: no params.nBins, de
 if ~isfield(params,'smoothingmethod'); if strcmp(params.smoothingmethod,'band-pass-filter');error('Set sampling frequency params.Fs'); end; end;
 if ~isfield(params,'plotZIP'); params.plotZIP=0; end
 if ~isfield(params,'PCAfreqband'); if strcmp(params.gatingmethod,'PCA')==1; error('specify frequency component params.PCAfreqband for PCA'); end; end
-if ~isfield(params,'PCAfreqband'); if strcmp(params.gatingmethod,'PCA_ICA')==1; error('specify frequency component params.PCAfreqband for PCA_ICA'); end; end
-if ~isfield(params,'PCAVar'); params.PCAVar=0.7; end; % if not given PCAVar=0.7
-if ~isfield(params,'nICA'); params.nICA=10; end; % if not given nICA=10;
-
+if ~isfield(params,'PCAVar');f strcmp(params.gatingmethod,'PCA')==1;   ;end
 
 
 %1: SIGNAL TO USE FOR SORTING

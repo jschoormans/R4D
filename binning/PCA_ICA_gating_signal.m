@@ -42,10 +42,11 @@ Evalues = diag(EvalueMatrix);
 Evalues = Evalues(end:-1:1);
 W = W(:,end:-1:1); W=W';
 %% take first n princpal components
-PCAVar=0.9;
+PCAVar=params.PCAVar;
 
 idx=find((cumsum(Evalues)./sum(Evalues))>PCAVar);
 nPCA=idx(1);
+disp(['taking the first ',num2str(nPCA),' principal components'])
 gating_signal=W(1:nPCA,:);
 
 %% do ICA
@@ -54,7 +55,7 @@ if params.visualize==1;
 figure(994); imshow(gating_signal.',[]); title('input data for ICA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
 
 
-nICA=20;
+nICA=params.nICA;
 [W] = myICA(gating_signal,nICA);
 
 

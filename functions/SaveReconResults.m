@@ -1,14 +1,9 @@
 function [MR,P] = SaveReconResults(MR,P);
 
+
 fprintf('filename=%s...\n',P.filename)
 fprintf('Saving parameters to text file...\n');
 % print parameter to text file
-CellData=struct2cell(P); %used to print all settings to textfile
-fileID=fopen([P.filename,'.txt'],'w');
-% fprintf(fileID,'%s \n',CellData{1,:})
-fprintf(fileID,'TO DO: fix printing of parameters to text file');
-fclose(fileID);
-
 
 if strcmp(P.recontype,'3D')
 fprintf('Saving NIFTI...\n')
@@ -18,6 +13,12 @@ nii=make_nii(abs(MR.Data),voxelsize,[],[],'');
 save_nii(nii,strcat(P.filename,'.nii'))
 end
 
+diary(P.filename)
+diary on 
+P
+P.CS
+P.espiritoptions
+P.reconslices
 fprintf('Golden-angle Stack-of-Stars Finished!\n')
-
+diary off
 end

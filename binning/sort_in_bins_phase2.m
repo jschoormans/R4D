@@ -1,4 +1,4 @@
-function [kdatau,ku,phaseval,indexphase] = sort_in_bins_phase2(gating_signal,ksp2,k,params)
+function [kdatau,ku,phaseval,indexphase] = sort_in_bins_value2(gating_signal,ksp2,k,params)
 
 disp('Sorting the gating_signal based on phase2 - up and down')
 [~,locs,~,minlocs] = peak_finding_gating_signal(gating_signal,params);

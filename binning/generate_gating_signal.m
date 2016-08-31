@@ -13,7 +13,9 @@ switch params.gatingmethod
     case 'ICA'
         disp('Independent Component analysis on real+imag+abs center of kspace');
         gating_signal = ICA_gating_signal(ksp2,params);
-
+    case 'PCA_ICA'
+        disp('First: PCA, then Independent Component analysis on real+imag+abs center of kspace');
+        gating_signal = PCA_ICA_gating_signal(ksp2,params);
         
 
 end

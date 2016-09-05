@@ -10,8 +10,8 @@ clear gating_signal
 for chan=1:params.nc;
 for nz=1:params.nz
 gating_signal(nz,chan,1,:)=abs(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,1,:)=imag(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,2,:)=real(ksp2(params.cksp,:,nz,chan));
+gating_signal(nz,chan,2,:)=imag(ksp2(params.cksp,:,nz,chan));
+gating_signal(nz,chan,3,:)=real(ksp2(params.cksp,:,nz,chan));
 % gating_signal(nz,chan,4,:)=angle(real(ksp2(params.cksp,:,nz,chan))+1j*imag(ksp2(params.cksp,:,nz,chan)));
 % gating_signal(nz,chan,5,:)=sum(abs(ksp2(:,:,nz,chan)).^2);
 
@@ -35,15 +35,16 @@ data=data./repmat(Vardata,[params.nspokes 1]);
 if params.visualize==1;
 figure(992); imshow(data,[]); title('input data for PCA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
 
-% calculate eigenvectors (loadings) W, and eigenvalues of the covariance matrix
-[W, EvalueMatrix] = eig(cov(data'));
-Evalues = diag(EvalueMatrix);
 
-% order by largest eigenvalue
-Evalues = Evalues(end:-1:1);
-W = W(:,end:-1:1); W=W';
-
-
+    % calculate eigenvectors (loadings) W, and eigenvalues of the covariance matrix
+    [W, EvalueMatrix] = eig(cov(data'));
+    Evalues = diag(EvalueMatrix);
+    
+    % order by largest eigenvalue
+    Evalues = Evalues(end:-1:1);
+    W = W(:,end:-1:1);
+    W=W';
+    % W=(Evalues*ones(size(Evalues')))'.*W; %try to scale PCA by importance
 % generate PCA component space (PCA scores)
 % pc = W * data;
 
@@ -56,11 +57,15 @@ else; fprintf(2,'WARNING: params.PCAfreqband includes the goldenangle frequency!
 freqs=linspace(-0.5,0.5,length(W(1,:)))*params.Fs;
 FW=abs(fftshift(fft(W,[],2),2));
 
+
 bandfreqs= (freqs < params.PCAfreqband(2)).*(freqs > params.PCAfreqband(1));
+outbandfreqs= (freqs < params.PCAfreqband(1))+(freqs > params.PCAfreqband(2));
 
-EnergyPC=Evalues.*sum(FW(:,logical(bandfreqs)).^2,2);
+EnergyPC=sum(FW(:,logical(bandfreqs)).^2,2);
+EnergyPC_outband=sum(FW(:,logical(outbandfreqs)).^2,2);
+RelEnergy=EnergyPC./EnergyPC_outband;
 
-[~,indexPC]=sort(EnergyPC,'descend');
+[~,indexPC]=sort(RelEnergy,'descend');
 PCA_choice=indexPC(1);
 
 if isfield(params,'PCA_PCnr'); %if specified; use certain PC instead of the one with max energy (temporary option?)
@@ -76,7 +81,7 @@ if params.visualize==1;
     for ii=1:10;
         tvector=linspace(0,params.nspokes/params.Fs,params.nspokes);
         plot(tvector,(ii/4)+W(ii,:));
-        text(tvector(5),(ii/4-(1/8)),['Principal component ',num2str(ii),', Energy in f-band :' ,num2str(EnergyPC(ii)),', Evalue: ',num2str(Evalues(ii))])
+        text(tvector(5),(ii/4-(1/8)),['Principal component ',num2str(ii),', Rel. Energy in f-band :' ,num2str(RelEnergy(ii)),' Evalue: ',num2str(Evalues(ii))])
         if ii==PCA_choice;
            text(tvector(end),ii/4,'chosen PC') 
         end

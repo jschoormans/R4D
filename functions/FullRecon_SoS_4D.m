@@ -1,6 +1,13 @@
 function [MR,P]=FullRecon_SoS_4D(P)
 [MR,P,ku,kdatau,k]=FullRecon_SoS_4D_init(P);
 
+% SENSE maps
+if P.sensitivitymaps == true && strcmp(P.sensitvitymapscalc,'sense')==1
+    P.senseLargeOutput=1
+    run FullRecon_SoS_sense.m;
+    sens=MR_sense.Sensitivity;
+end
+
 %% BART CS
 res=MR.Parameter.Encoding.XRes(1);
 pause(5);

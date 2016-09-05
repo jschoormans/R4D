@@ -1,5 +1,5 @@
  
-function [gating_signal2,W] = PCA_ICA_gating_signal(ksp2,params)
+function [gating_signal2,W] = PCA_ICA_gating_signal_test(ksp2,params)
 
 % for chan=1:params.nc;
 % gating_signal(chan,:)=sum(abs(ksp2(params.cksp,:,:,chan)),3);
@@ -7,10 +7,10 @@ function [gating_signal2,W] = PCA_ICA_gating_signal(ksp2,params)
 clear gating_signal
 
 for chan=1:params.nc;
-for nz=1:params.nz
-gating_signal(nz,chan,1,:)=abs(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,2,:)=imag(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,3,:)=real(ksp2(params.cksp,:,nz,chan));
+for nz=20:40
+gating_signal(nz-19,chan,1,:)=log(abs(ksp2(params.cksp,:,nz,chan)));
+gating_signal(nz-19,chan,2,:)=(abs(imag(ksp2(params.cksp,:,nz,chan))));
+gating_signal(nz-19,chan,3,:)=real(ksp2(params.cksp,:,nz,chan));
 % gating_signal(nz,chan,4,:)=angle(real(ksp2(params.cksp,:,nz,chan))+1j*imag(ksp2(params.cksp,:,nz,chan)));
 % gating_signal(nz,chan,5,:)=sum(abs(ksp2(:,:,nz,chan)).^2);
 
@@ -36,6 +36,7 @@ if params.visualize==1;
 figure(992); imshow(data,[]); title('input data for PCA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
 
 
+if params.dummy ==1 %PCA 1
     % calculate eigenvectors (loadings) W, and eigenvalues of the covariance matrix
     [W, EvalueMatrix] = eig(cov(data'));
     Evalues = diag(EvalueMatrix);
@@ -45,6 +46,20 @@ figure(992); imshow(data,[]); title('input data for PCA'); xlabel('coil*slice di
     W = W(:,end:-1:1);
     W=W';
     % W=(Evalues*ones(size(Evalues')))'.*W; %try to scale PCA by importance
+elseif params.dummy==2 %simple of kPCA % this seems to scale the PC as well; may be important for ICA input?
+    %0.37
+    [W, eigVector, Evalues]=kPCA(data,50,'simple',[]) ;
+    W=W./(10*max(W(:))); %scaling
+    W=W';
+elseif params.dummy==3   %GAUSSIAN kernel PCA 
+    DIST=distanceMatrix(data);
+    DIST(DIST==0)=inf;
+    DIST=min(DIST);
+    para=5*mean(DIST);
+    [W, eigVector, Evalues]=kPCA(data,50,'gaussian',para) ;
+    W=W./(10*max(W(:))); %scaling
+    W=W';
+end
 
 %% take first n princpal components
 PCAVar=params.PCAVar;
@@ -77,10 +92,56 @@ if false
 end
 
 nICA=params.nICA;
+if params.dummyICA==1
 [W] = myICA(gating_signal,nICA);
+elseif params.dummyICA==2
+% CALCULATE SPECTORGRAMS FOR ALL PC & AKE BIG VECTOR
+nICA=params.nICA;
+%%
+nICA=3
 
-if false
-   W=ifft(W,[],1); 
+clear gating_signal_F
+for i=1:size(gating_signal,1);
+%     gating_signal_F(i,:,:)=spectrogram(gating_signal(i,:),[50],[0],[50]);
+       gating_signal_F(i,:,:)=reshape(gating_signal(i,:),[10,141]);
+       
+    
+end
+gating_signal_F=permute(gating_signal_F,[1 3 2]);
+
+gating_signal_F=fft(gating_signal_F,[],2);
+
+% remove high f comps
+gating_signal_F(:,60:80,:)=0;
+% gating_signal_F(:,end-50:end,:)=0;
+
+       %plot histo
+       figure(88); imshow(abs(squeeze(gating_signal_F(1,:,:))),[]);
+ 
+gating_signal_F_rs=reshape(gating_signal_F,[size(gating_signal_F,1),size(gating_signal_F,2)*size(gating_signal_F,3)]);
+       %plot reshaped histo
+       figure(89); plot(abs(squeeze(gating_signal_F_rs(1,:))));
+
+
+gating_signal_F_rs=double(gating_signal_F_rs);
+[W] = myICA(gating_signal_F_rs,nICA);
+
+       %plot one IC
+       figure(90); plot(abs(squeeze(W(1,:))));
+       
+Wr=reshape(W,[nICA,size(gating_signal_F,2),size(gating_signal_F,3)]);
+
+       %plot one reshaped IC
+       figure(91); imshow(abs(squeeze(Wr(1,:,:))),[]);
+
+
+%back to time domain
+Wt=ifft(fftshift(Wr),[],2);
+figure(92); plot(abs(squeeze(Wt(1,:,1))))
+% Wt=permute(Wt,[1 3 2])
+Wt_r=reshape(Wt,[size(W)]);
+figure(93);plot(abs(Wt_r(1,:)))
+%%
 end
 
 % generate PCA component space (PCA scores)

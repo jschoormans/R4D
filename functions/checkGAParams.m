@@ -45,7 +45,7 @@ end
 
 % check sensitvity parameters
 if isfield(P,'sensitivitymaps')
-    if P.sensitivitymaps == 1 && strcmp(P.sensitvitymapscalc,'sense')
+    if (P.sensitivitymaps == 1) && strcmp(P.sensitvitymapscalc,'sense')
         for dummy=1 %used for break
         if P.channelcompression==true;
            disp('Channel Compression and sensitivity maps are not compatible! Using sum of squares instead...') 
@@ -101,6 +101,14 @@ end
 if ~isfield(P.espiritoptions,'nmaps')
    P.espiritoptions.nmaps=1; 
 end
+
+% DCE RECONS
+if strcmp(P.recontype,'DCE')
+    if ~isfield(P.DCEParams,'nspokes')
+        error('specify number of spokes used for DCE frames! in P.DCEParams.nspokes')
+    end
+end
+
 
 
 

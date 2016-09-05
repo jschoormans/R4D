@@ -45,7 +45,7 @@ end
 
 % check sensitvity parameters
 if isfield(P,'sensitivitymaps')
-    if P.sensitivitymaps == 1 && strcmp(P.sensitvitymapscalc,'sense')
+    if (P.sensitivitymaps == 1) && strcmp(P.sensitvitymapscalc,'sense')
         for dummy=1 %used for break
         if P.channelcompression==true;
            disp('Channel Compression and sensitivity maps are not compatible! Using sum of squares instead...') 
@@ -80,10 +80,42 @@ if ~strcmp(P.recontype,'3D') && P.sensitivitymaps==false;
     error('warning, sense maps needed! Change settings.')
 end
 
-
-if    size(MR.Parameter.Parameter2Read.echo)>1
-    disp('data has multiple echoes!')
-    MR.Parameter.Parameter2Read.echo=[0]
+if ~isfield(P,'CS')
+    P.CS=struct;
 end
+if ~isfield(P.CS,'iter')
+    P.CS.iter=250;
+end
+if ~isfield(P.CS,'reg')
+    P.CS.reg=0.002;
+end
+
+if ~isfield(P,'oneTEtemp')
+   P.oneTEtemp=false; 
+end
+    
+if ~isfield(P,'espiritoptions')
+    P.espiritoptions=struct;
+end
+
+if ~isfield(P.espiritoptions,'nmaps')
+   P.espiritoptions.nmaps=1; 
+end
+
+% DCE RECONS
+if strcmp(P.recontype,'DCE')
+    if ~isfield(P.DCEParams.nspokes)
+        error('specify number of spokes used for DCE frames! in P.DCEParams.nspokes')
+    elseif %check if nspokes in part of Fibonacci sequence
+        P.DCEParams.nspokes=check_golden_angle(goldenangle,P.DCEParams.nspokes); 
+    end
+    P.DCEParams.TimeResolution=P.DCEParams.nspokes*MR.Parameter.Labels.ScanDuration/MR.Parameter.Labels.Samples(2); %recalculate time resolution
+    
+end
+
+%% CHECK GOLDEN ANGLE
+P.Gg
+
+
 
 

@@ -1,5 +1,5 @@
 function [ksp_sorted,k_sorted,gating_signal] = ksp2frames(ksp2,k,params,gating_signal)
-%ksp2frames(ksp,sortvector,params) Sorts radial k-space spokes into frames
+%ksp2frames(ksp,k,sortvector,params) Sorts radial k-space spokes into frames
 %JASPER SCHOORMANS - AMC AMSTERDAM - july 2016
 
 %TO DO: -ADD DETAILED EXPLANATION

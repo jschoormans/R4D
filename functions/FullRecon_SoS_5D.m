@@ -1,6 +1,7 @@
 function [MR,P]=FullRecon_SoS_5D(P)
 P=checkGAParams(P);
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
+[MR,P] = UpdateReadParamsMR(MR,P);
 
 P.nEchoes=MR.Parameter.Encoding.NrEchoes;
 res=MR.Parameter.Encoding.XRes(1);

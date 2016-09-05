@@ -10,8 +10,8 @@ clear gating_signal
 for chan=1:params.nc;
 for nz=1:params.nz
 gating_signal(nz,chan,1,:)=abs(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,1,:)=imag(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,2,:)=real(ksp2(params.cksp,:,nz,chan));
+gating_signal(nz,chan,2,:)=imag(ksp2(params.cksp,:,nz,chan));
+gating_signal(nz,chan,3,:)=real(ksp2(params.cksp,:,nz,chan));
 % gating_signal(nz,chan,4,:)=angle(real(ksp2(params.cksp,:,nz,chan))+1j*imag(ksp2(params.cksp,:,nz,chan)));
 % gating_signal(nz,chan,5,:)=sum(abs(ksp2(:,:,nz,chan)).^2);
 
@@ -22,17 +22,17 @@ end
 gating_signal=reshape(gating_signal,[size(gating_signal,1)*size(gating_signal,2)*size(gating_signal,3),params.nspokes]);
 
 
-nICA=3;
-[W] = myICA(gating_signal(100:120,:),nICA);
-figure(99);hold on ; for i=1:nICA;plot(W(i,:)'+3*i);end
-
 if params.visualize==1;
 figure(992); imshow(gating_signal.',[]); title('input data for ICA'); xlabel('coil*slice dimension');ylabel('time (Fs)');end
 
+nICA=3;
+[W] = myICA(gating_signal,nICA);
+figure(99);hold on ; for i=1:nICA;plot(W(i,:)'+3*i);end
 
 
 % generate PCA component space (PCA scores)
 % pc = W * data;
+
 
 %find which PC has the most energy in a prescribed frequency band:
 GAfreq=params.Fs*(params.goldenangle/360); %freq of GA signal

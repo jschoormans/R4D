@@ -15,7 +15,7 @@ function [MR,P] = GoldenAngle(varargin);
 % 
 % P.recontype           %'3D'; 'DCE'; '4D' ; '5D'(multiple echoes)  (standard:3D)
 % 
-% P.sensitivitymaps     %true/false use of sense maps for coil combinations
+% P.sensitivitymaps     %1/0 use of sense maps for coil combinations
 % P.sensitvitymapscalc  %way of calculating sensitivity maps: sense (standard)/espirit
 % P.dynamicespirit      %true(4D)/false(3D) (TO DO put in espiritoptions!)
 % P.espiritoptions.nmaps %number of maps to compute and use
@@ -77,10 +77,9 @@ switch P.recontype
     case '4D';  disp('4D reconstruction');
         [MR,P]=FullRecon_SoS_4D(P);
     case 'DCE'; disp('DCE reconstruction (not yet implemented...');
-        
+        [MR,P]=FullRecon_SoS_DCE(P);
     case '5D';  disp('5D reconstruction (multiple echoes)');
         [MR,P]=FullRecon_SoS_5D(P);
-        
     case '3D';  disp('Performing full 3D golden angle stack-of-stars reconstruction...');
         [MR,P]=FullRecon_SoS_3D(P);
 end

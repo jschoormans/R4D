@@ -1,6 +1,9 @@
 function [MR,P] = UpdateReadParamsMR(MR,P)
 
 
+%% CHECK GOLDEN ANGLE
+P.goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+
 if isfield(P,'channelstoread')
 MR.Parameter.Parameter2Read.chan=P.channelstoread;
 end
@@ -51,6 +54,13 @@ else
             MR.Parameter.Parameter2Read.echo=[0]
     end
 end
+
+if strcmp(P.recontype,'DCE')
+    P.DCEParams.nspokes=check_golden_angle(P.goldenangle,P.DCEParams.nspokes);
+    P.DCEParams.TimeResolution=P.DCEParams.nspokes*MR.Parameter.Labels.ScanDuration/MR.Parameter.Labels.Samples(2); %recalculate time resolution
+ end
+   
+
 
 
 MR.Parameter.Parameter2Read.Update; 

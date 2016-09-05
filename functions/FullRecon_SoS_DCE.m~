@@ -43,6 +43,9 @@ end
 
 % wu=getRadWeightsGA(ku);
 
+%reshape for BART toolbox
+kdatau=permute(kdatau,[1 2 3 4 6 7 8 9 10 11 5])
+
 %% BART CS
 res=MR.Parameter.Encoding.XRes(1);
 pause(5);

@@ -6,12 +6,15 @@ function [gating_signal2,W] = PCA_gating_signal_test(ksp2,params)
 % gating_signal(chan,:)=sum(abs(ksp2(params.cksp,:,:,chan)),3);
 % end
 clear gating_signal
-
-for chan=1:params.nc;
-for nz=1:params.nz
-% gating_signal(nz,chan,1,:)=abs(ksp2(params.cksp,:,nz,chan));
-% gating_signal(nz,chan,1,:)=imag(ksp2(params.cksp,:,nz,chan));
-gating_signal(nz,chan,1,:)=real(ksp2(params.cksp,:,nz,chan));
+chanc=0; nzc=0;
+for chan=params.gatingchans;
+    chanc=chanc+1;
+    nzc=0;
+for nz=params.gatingnz
+    nzc=nzc+1;
+gating_signal(nzc,chanc,1,:)=abs(ksp2(params.cksp,:,nz,chan));
+gating_signal(nzc,chanc,2,:)=imag(ksp2(params.cksp,:,nz,chan));
+gating_signal(nzc,chanc,3,:)=real(ksp2(params.cksp,:,nz,chan));
 % gating_signal(nz,chan,1,:)=angle(real(ksp2(params.cksp,:,nz,chan))+1j*imag(ksp2(params.cksp,:,nz,chan)));
 % gating_signal(nz,chan,1,:)=sum(abs(ksp2(:,:,nz,chan)).^2);
 

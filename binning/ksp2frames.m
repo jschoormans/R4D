@@ -1,4 +1,4 @@
-function [ksp_sorted,k_sorted,gating_signal] = ksp2frames(ksp2,k,params,gating_signal)
+function [ksp_sorted,k_sorted,gating_signal,indexphase] = ksp2frames(ksp2,k,params,gating_signal)
 %ksp2frames(ksp,k,sortvector,params) Sorts radial k-space spokes into frames
 %JASPER SCHOORMANS - AMC AMSTERDAM - july 2016
 
@@ -59,7 +59,8 @@ if ~isfield(params,'PCAfreqband'); if strcmp(params.gatingmethod,'PCA')==1; erro
 if ~isfield(params,'PCAfreqband'); if strcmp(params.gatingmethod,'PCA_ICA')==1; error('specify frequency component params.PCAfreqband for PCA_ICA'); end; end
 if ~isfield(params,'PCAVar'); params.PCAVar=0.7; end; % if not given PCAVar=0.7
 if ~isfield(params,'nICA'); params.nICA=10; end; % if not given nICA=10;
-
+if ~isfield(params,'gatingchans'); params.gatingchans=[1:params.nc]; end; % if not given nICA=10;
+if ~isfield(params,'gatingnz'); params.gatingnz=[1:params.nz]; end; % if not given nICA=10;
 
 
 %1: SIGNAL TO USE FOR SORTING

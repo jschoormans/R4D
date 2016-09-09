@@ -7,13 +7,13 @@ MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 
 
 
-%SENSITVITIES
+%SENSITVITIES (TO FIX!)
 if P.sensitivitymaps == true
-    P.senseLargeOutput=1;
-    run FullRecon_SoS_sense.m;
     if strcmp(P.sensitvitymapscalc,'sense')==1
-         sens=MR_sense.Sensitivity;
-        clear MR_sense;
+            P.senseLargeOutput=1;
+            run FullRecon_SoS_sense.m;
+            sens=MR_sense.Sensitivity;
+            clear MR_sense;
     end
 end
 
@@ -49,7 +49,7 @@ pause(5);
 coords=RadTraj2BartCoords(ku,res);
 coordsfull=RadTraj2BartCoords(k,res);
 %
-reco_cs=zeros(res,res,length(P.reconslices),P.binparams.nBins);
+reco_cs=zeros(res,res,length(P.reconslices),nt);
 for slice=P.reconslices
     fprintf('Recon slice %d of %d.',slice,size(kdatau,3))
     ksp_acq=(kdatau(:,:,slice,:,:));
@@ -79,7 +79,7 @@ for slice=P.reconslices
     
     dummy=bart(bartoptions, coords, ksp_acq_t, sensbart);
     dummy=bart('rss 16',dummy);
-    reco_cs(:,:,slice,:)=squeeze(dummy)
+    reco_cs(:,:,slice,:)=squeeze(dummy);
 
     if true
         cd(P.resultsfolder)

@@ -5,10 +5,11 @@ function [MR,P] = UpdateReadParamsMR(MR,P)
 P.goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
 
 if isfield(P,'channelstoread')
-MR.Parameter.Parameter2Read.chan=P.channelstoread;
+disp('Selecting channels to read')
+    MR.Parameter.Parameter2Read.chan=P.channelstoread;
 end
 if isfield(P,'spokestoread')
-MR.Parameter.Parameter2Read.ky=[0:P.spokestoread]';
+MR.Parameter.Parameter2Read.ky=P.spokestoread;
 end
 
 if P.channelcompression ==true;
@@ -17,6 +18,12 @@ if P.channelcompression ==true;
     MR.Parameter.Recon.ACNrVirtualChannels=P.cc_nrofchans;
 end
 
+
+if ~isfield(P,'reconresolution') %TO TEST!!!
+P.reconresolution(1)=round(MR.Parameter.Scan.FOV(1)./MR.Parameter.Scan.AcqVoxelSize(1));
+P.reconresolution(2)=round(MR.Parameter.Scan.FOV(1)./MR.Parameter.Scan.AcqVoxelSize(1));
+P.reconresolution(3)=round(MR.Parameter.Scan.FOV(2)./MR.Parameter.Scan.AcqVoxelSize(3));
+end
 
 if isfield(P,'reconresolution');
     if ~strcmp(P.recontype,'3D');
@@ -35,23 +42,24 @@ if isfield(P,'reconslices'); %check if reconslices are given
 else %given recon slices (mind oversampling!)
     zdim=MR.Parameter.Encoding.ZRes(1).*MR.Parameter.Encoding.KzOversampling(1);
     os_slices=round(zdim-MR.Parameter.Encoding.ZRes(1));
-    P.reconslices=[1+floor(os_slices/2):floor(os_slices/2)+MR.Parameter.Encoding.ZRes] 
+    P.reconslices=[1+floor(os_slices/2):floor(os_slices/2)+MR.Parameter.Encoding.ZRes] ;
 end
 
 
-if  size(MR.Parameter.Parameter2Read.echo)>1
+if  length(MR.Parameter.Parameter2Read.echo)>1
     disp('data has multiple echoes!')
     if strcmp(P.recontype,'4D')
         P.oneTEtemp =true;
         disp('only first echo used for 4D recon. If you want to reconstruct all echoes, use 5D recon!')
     end
+    
 end
 
 if P.oneTEtemp ==true;
-    MR.Parameter.Parameter2Read.echo=[0]
+    MR.Parameter.Parameter2Read.echo=0;
 else
     if strcmp(P.recontype,'4D')==true; %automatically use ONLY first echo for 4D recon;
-            MR.Parameter.Parameter2Read.echo=[0]
+            MR.Parameter.Parameter2Read.echo=0;
     end
 end
 

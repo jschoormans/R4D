@@ -27,14 +27,15 @@ function [MR,P] = GoldenAngle(varargin);
 % P.reconresolution     %vector of matrix size (x,y,z)
 % P.reconslices=[vector] %vector of slices to reconstruct (1 to max)
 % empty=all slices (only for 4D and 5D)
+
 % P.CS.iter
 % P.CS.reg
+% P.flyback
+% P.type3D  1/2/3
 
+% P.binparams           %structure of parameters to use for binning (see ksp2frames)
 
-
-% P.binparams           %structure of parameters to use for binning (see
-% ksp2frames)
-
+% P.debug=1;            %set debug level
 
 % TO DO IN FUTURE (IDEAS)
 % P.DCEsettings %settings for DCE recons
@@ -47,7 +48,6 @@ function [MR,P] = GoldenAngle(varargin);
 % Remove slice oversampling 
 % maybe build in DCE in 4D part instead of into NUFFT?
 % add interpolation to finer resolution in last step
-% m2 binning
 % automatic coil selection (remove noise-only coils robustly)
 
 disp('--------------------------------------------------------------')
@@ -84,7 +84,7 @@ switch P.recontype
         [MR,P]=FullRecon_SoS_3D(P);
 end
 
-[MR,P] = SaveReconResults(MR,P);
+[MR,P] = SaveReconResults(MR,P); % SAVES THE TEXT FILE WITH PARAMETERS
 toc
 disp('--------------------------------------------------------------')
 

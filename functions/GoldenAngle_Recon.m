@@ -36,6 +36,7 @@ classdef GoldenAngle_Recon < MRecon
             goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
             Npe=MR.Parameter.Scan.Samples(2); %number of phase-encoding lines
             angles=[0:(goldenangle)*(pi/180):(Npe-1)*(goldenangle)*(pi/180)]; %relative angles measured (first set at 0)
+    
             MR.Parameter.Gridder.RadialAngles=angles';
         end
         
@@ -44,12 +45,14 @@ classdef GoldenAngle_Recon < MRecon
             %Buonincontrini, Sawiak, Caprenter
             disp('Phase Shift (Eddy current) correction...')
             angles=MR.Parameter.Gridder.RadialAngles(1:size(MR.Data,2))'; %only use angles for which there is data
+
             anglesrad=mod(angles,2*pi);
             cksp=floor(size(MR.Data,1)/2)+1; %how to find it generally?
             
             for nechoes=1:size(MR.Data,7)
             for nc=1:size(MR.Data,4)
                 for nz=floor(size(MR.Data,3)/2)+1;
+                    nc
                     y=unwrap(angle(MR.Data(cksp,:,nz,nc))); %phase of center of k-space (with corrected k: find closest to zero?!?!)
                     Gx=1;Gy=1;
                     x=[ones(size(anglesrad))',Gx.*cos(anglesrad'),Gy.*sin(anglesrad')];
@@ -62,25 +65,28 @@ classdef GoldenAngle_Recon < MRecon
             MR.Data=kspcorr;
         end
         
-        
         function PerformGrid(MR)
             disp('Gridding data...')
             MR.GridderCalculateTrajectory;
             MR.Parameter.Gridder.AlternatingRadial='no';
+            [nx,ntviews,nz,nc]=size(MR.Data);
+            goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+            k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+            wu=calcDCF(k,MR.Parameter.Encoding.XReconRes); %calculate better weights 
+            MR.Parameter.Gridder.Weights=wu;
             MR.GridData;
+
         end
         function Perform2(MR)
-            %disp('Ringing Filter')
-            %MR.RingingFilter;
+            disp('Ringing Filter')
+            MR.RingingFilter;
             MR.ZeroFill
             disp('Converting to image space...')
-%             MR.K2IM %if reconstructing slice by slice (yz) first iFFT in slice-direction
-%             MR.EPIPhaseCorrection; %EPI correction for FOV/2 Ghost from eddy current effects
-%             MR.K2IP;
             MR.K2I;
+            MR.GridderNormalization;
+
             disp('SENSE unfold...')
             MR.SENSEUnfold;
-            MR.GridderNormalization;
             MR.ConcomitantFieldCorrection;
             disp('Combining Coils...')
             MR.CombineCoils;
@@ -92,7 +98,20 @@ classdef GoldenAngle_Recon < MRecon
             MR.RotateImage;
             disp('Reconstruction finished')
         end
-
+        
+        function CheckAllChannels(MR) %function to do whole recon without comboining coils
+            disp('Check All Channels - recon of all coil channels separately')
+            MR.Parameter.Parameter2Read.chan
+            MR.Perform1;    %reading and sorting data
+            MR.CalculateAngles;
+            MR.PhaseShift;
+            MR.PerformGrid;
+            MR.RingingFilter;
+            MR.ZeroFill
+            MR.K2I;
+            MR.GridderNormalization;
+            MR.ShowData
+        end
     end
     
     % These functions are Hidden to the user

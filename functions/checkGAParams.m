@@ -39,6 +39,12 @@ if ~isfield(P,'recontype'); %if nothing specified, do normal 3D recon
 P.recontype='3D'; 
 end
 
+if strcmp(P.recontype,'3D')
+   if ~isfield(P,'type3D')
+      P.type3D=1; 
+   end 
+end
+
 if ~isfield(P,'sensitvitymapscalc');
     P.sensitvitymapscalc='sense';
 end
@@ -109,7 +115,9 @@ if strcmp(P.recontype,'DCE')
     end
 end
 
-
+if ~isfield(P,'debug') 
+    P.debug=0; %debug level 
+end
 
 
 

@@ -1,15 +1,19 @@
 % FullRecon_SoS_sense
+%code that calculates the sense maps for SoS radial scans - either using
+%coil survey scans or sense ref scans
+
 switch P.sensitvitymapscalc
     case 'sense'
         disp('Initializing MRSense...')
-        MRref=MRecon(fullfile(P.folder,P.sense_ref));
+        MRref=MRecon(fullfile(P.folder,P.sense_ref));        
         MRsurvey=MRecon(fullfile(P.folder,P.coil_survey));
+                                            %set oversampling to 1 & save
+        
         MR_sense = MRsense(MRref,MR,MRsurvey); %for now use standard settings...
-%         MR_sense.Smooth=1;
-%         MR_sense.Extrapolate=1;
-%         MR_sense.Mask=1;
+        MR_sense.Smooth=1;
+        MR_sense.Extrapolate=1;
+        MR_sense.Mask=0;
         if P.senseLargeOutput==1; %make sense maps larger
-            OutputSizeSensitivity=[MR.Parameter.Encoding.XReconRes,MR.Parameter.Encoding.YReconRes,MR.Parameter.Encoding.ZReconRes];
             MR_sense.Rotate=0;
             MR_sense.MatchTargetSize=1;
             MR_sense.OutputSizeReformated=OutputSizeSensitivity; %give option to choose these?
@@ -25,6 +29,23 @@ switch P.sensitvitymapscalc
 
         MR.Parameter.Recon.Sensitivities=MR_sense;
         MR.Parameter.Recon.SENSERegStrength=0; %not sure about these things though...
+        sens=conj(flipdim(MR_sense.Sensitivity,1));
+        sens=double(sens);%./max(sens(:));
+        
+                            %set oversampling factors back to originals;;;
+                            %clear oversampliing factor params
+        
+        if P.debug>0;
+           figure(551)
+           R=[];
+           for iii=1:size(sens,4);
+               R=cat(2,R,squeeze(sens(:,:,floor(size(sens,3)/2),iii)));
+           end
+           imshow(abs(R),[]); title('sens maps')
+            
+        end
+
+        
     case 'espirit'
         %todo...
         res=MR.Parameter.Encoding.XReconRes;

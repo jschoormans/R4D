@@ -13,7 +13,17 @@ MR.PhaseShift;
 MR.Data=ifft(MR.Data,[],3); %eventually: remove slice oversampling
 [nx,ntviews,ny,nc]=size(MR.Data);
 goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+
+if mod(P.TE,2)==0 %check if even 
+    if  P.flyback==1 %check if there is flyback
+        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+        k=k(end:-1:1,:);
+        disp('flyback correction!')
+    end
+else
+    k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+
+end
 
 
 %% do binning (for echo 1)

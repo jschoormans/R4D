@@ -7,7 +7,12 @@ switch P.sensitvitymapscalc
         disp('Initializing MRSense...')
         MRref=MRecon(fullfile(P.folder,P.sense_ref));        
         MRsurvey=MRecon(fullfile(P.folder,P.coil_survey));
-                                            %set oversampling to 1 & save
+        
+        %set oversampling to 1 & save
+        KxO=MR.Parameter.Encoding.KxOversampling;
+        KyO=MR.Parameter.Encoding.KyOversampling;
+        MR.Parameter.Encoding.KxOversampling=1;
+        MR.Parameter.Encoding.KyOversampling=1;
         
         MR_sense = MRsense(MRref,MR,MRsurvey); %for now use standard settings...
         MR_sense.Smooth=1;
@@ -32,8 +37,11 @@ switch P.sensitvitymapscalc
         sens=conj(flipdim(MR_sense.Sensitivity,1));
         sens=double(sens);%./max(sens(:));
         
-                            %set oversampling factors back to originals;;;
-                            %clear oversampliing factor params
+        %set oversampling factors back to originals;;;
+        MR.Parameter.Encoding.KxOversampling=KxO;
+        MR.Parameter.Encoding.KyOversampling=KyO;
+        %clear oversampliing factor params
+        clear KxO KyO
         
         if P.debug>0;
            figure(551)

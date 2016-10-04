@@ -22,7 +22,7 @@ function varargout = DCE_inflow(varargin)
 
 % Edit the above text to modify the response to help DCE_inflow
 
-% Last Modified by GUIDE v2.5 30-Sep-2016 13:46:46
+% Last Modified by GUIDE v2.5 30-Sep-2016 15:13:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,8 +54,11 @@ function DCE_inflow_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for DCE_inflow
 handles.output = hObject;
-handles.ValSl1=[0];
-handles.ValSl2=[0];
+handles.ValSl1=0;
+handles.ValSl2=0;
+
+axes(handles.axes1);cla;
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -92,6 +95,11 @@ cnz=floor(nz/2)+1;
 
 Ts=MRC.Parameter.Scan.TR.*MRC.Parameter.Scan.Samples(3).*1e-3;
 t=[1:length(MRC.Data)].*Ts;
+
+Fs=1./Ts;
+center_signal=(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45);
+filt(center_signal)
+
 handles.t=t;
 handles.plotrange=[min(smooth(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45)),max(smooth(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45))];
 handles.DC=smooth(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45);
@@ -118,13 +126,16 @@ function slider1_Callback(hObject, eventdata, handles)
 t=handles.t;
 set(hObject,'Min',0)
 set(hObject,'Max',t(end))
-handles.ValSl1=get(hObject,'Value')
+handles.ValSl1=get(hObject,'Value');
 axes(handles.axes1); cla;
 hold on 
 plot(handles.t,handles.DC,'k'); xlabel('t(s)');
 plot([handles.ValSl1,handles.ValSl1],handles.plotrange,'r')
 plot([handles.ValSl2,handles.ValSl2],handles.plotrange,'r')
 hold off
+
+guidata(hObject,handles);
+
 
 
 
@@ -150,15 +161,18 @@ function slider2_Callback(hObject, eventdata, handles)
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
 t=handles.t;
-set(hObject,'Min',0)
-set(hObject,'Max',t(end))
-handles.ValSl2=get(hObject,'Value')
+set(hObject,'Min',0);
+set(hObject,'Max',t(end));
+handles.ValSl2=get(hObject,'Value');
 axes(handles.axes1);cla;
 hold on 
 plot(handles.t,handles.DC,'k'); xlabel('t(s)');
 plot([handles.ValSl1,handles.ValSl1],handles.plotrange,'r')
 plot([handles.ValSl2,handles.ValSl2],handles.plotrange,'r')
 hold off
+
+guidata(hObject,handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -180,11 +194,9 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 P=handles.P;
-spoke1=find(handles.t-handles.ValSl1>0,1,'first')
-spoke2=find(handles.t-handles.ValSl2>0,1,'first')
+spoke1=find(handles.t-handles.ValSl1>0,1,'first')-1;
+spoke2=find(handles.t-handles.ValSl2>0,1,'first')-1;
+P.spokestoread=[spoke1:spoke2].';
+P.sensitivitymaps = true;
 
-P.spokestoread=[find(handles.t-handles.ValSl1)]
 [MR,P]=GoldenAngle(P)
-
-
-

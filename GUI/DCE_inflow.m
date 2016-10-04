@@ -95,9 +95,14 @@ cnz=floor(nz/2)+1;
 
 Ts=MRC.Parameter.Scan.TR.*MRC.Parameter.Scan.Samples(3).*1e-3;
 t=[1:length(MRC.Data)].*Ts;
+
+Fs=1./Ts;
+center_signal=envelope(abs(mean(MRC.Data(cksp,:,cnz,1),4)),20,'mean');
+filt(center_signal)
+
 handles.t=t;
-handles.plotrange=[min(smooth(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45)),max(smooth(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45))];
-handles.DC=smooth(abs(mean(MRC.Data(cksp,:,cnz,1),4)),45);
+handles.plotrange=[min(center_signal),max(center_signal)];
+handles.DC=center_signal;
 
 handles.P.file=file;
 handles.P.folder=folder;

@@ -19,8 +19,8 @@ switch P.type3D
         [nx,ntviews,nz,nc]=size(MR.Data);
         goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
         k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
-%         wu=calcDCF(k,MR.Parameter.Encoding.XReconRes);
-        wu=getRadWeightsGA(k);
+        wu=calcDCF(k,MR.Parameter.Encoding.XReconRes);
+%         wu=getRadWeightsGA(k);
         kdata=ifft(MR.Data,[],3);
         
         for selectslice=P.reconslices

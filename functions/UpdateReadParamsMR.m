@@ -25,15 +25,11 @@ P.reconresolution(2)=round(MR.Parameter.Scan.FOV(1)./MR.Parameter.Scan.AcqVoxelS
 P.reconresolution(3)=round(MR.Parameter.Scan.FOV(2)./MR.Parameter.Scan.AcqVoxelSize(3));
 end
 
-if isfield(P,'reconresolution');
-    if ~strcmp(P.recontype,'3D');
-    MR.Parameter.Encoding.XReconRes=P.reconresolution(1);
-    MR.Parameter.Encoding.YReconRes=P.reconresolution(2);
-    MR.Parameter.Encoding.ZReconRes=P.reconresolution(3);
-    else 
-        disp('P.reconresolution not yet supported with 3D recon!')
-    end
-end
+% if isfield(P,'reconresolution'); %not sure about this
+%     MR.Parameter.Encoding.XReconRes=P.reconresolution(1);
+%     MR.Parameter.Encoding.YReconRes=P.reconresolution(2);
+%     MR.Parameter.Encoding.ZReconRes=P.reconresolution(3);
+% end
 
 if isfield(P,'reconslices'); %check if reconslices are given
     if max(P.reconslices)>round(MR.Parameter.Encoding.ZRes.*MR.Parameter.Encoding.KzOversampling)

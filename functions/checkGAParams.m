@@ -1,4 +1,5 @@
 function P=checkGAParams(varargin)
+% function to check and initialize some parameters 
 
 if length(varargin)>1
     error('Usage: FullRecon_SoS(P) \n')
@@ -122,8 +123,12 @@ if strcmp(P.recontype,'DCE')
     if ~isfield(P.DCEparams,'Beta')
         P.DCEparams.Beta='LS'
     end
+    if ~isfield(P.DCEparams,'display')
+        P.DCEparams.display=1;
+    end
     
-    
+    P.DCEparams.W = TV_Temp();
+    P.DCEparams.W2 = TV2_Temp();
     
 end
 

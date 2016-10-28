@@ -55,7 +55,7 @@ switch P.sensitvitymapscalc
 
         
     case 'espirit'
-        %todo...
+        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
         res=MR.Parameter.Encoding.XReconRes;
         clear coords
         coords(1,:,:,:)=real((k(:,:,:))).*res;

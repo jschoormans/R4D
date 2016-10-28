@@ -30,8 +30,8 @@ function [ksp_sorted,k_sorted,gating_signal,indexphase] = ksp2frames(ksp2,k,para
 %params.
 %params.PCAVar  :amount of variance to be explained by PCA before ICA (0-1) [0.7] 
 %params.nICA    : number of indepent components to make [10]
-
-
+% gatingnz
+%gatingchans
 
 %%% START CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SOME PARAMETERS DECLARATION
@@ -116,6 +116,21 @@ if params.visualize==1
         subplot(ceil(params.nBins/2),3,i)
         plot(k_sorted(:,:,i))
     end
+    
+        %plot of frequency spectrum after filtering
+    L=floor(length(gating_signal_s)/2);
+    Fourier_signal=abs(fftshift(fft(gating_signal_s)));
+    freqs=linspace(-0.5,0.5,length(gating_signal_s)).*params.Fs;
+    figure(996);
+    stem(freqs(L:end),Fourier_signal(L:end),'r');
+    title('spectrum of filtered/smoothed gating signal');
+    xlabel('frequency (Hz)');  ylabel('abs value of component')
+    
+    
+    
+    
+    
+    
     
 end
 

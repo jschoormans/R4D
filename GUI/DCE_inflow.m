@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before DCE_inflow is made visible.
 function DCE_inflow_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -66,7 +65,6 @@ guidata(hObject, handles);
 % UIWAIT makes DCE_inflow wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
-
 % --- Outputs from this function are returned to the command line.
 function varargout = DCE_inflow_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -77,7 +75,6 @@ function varargout = DCE_inflow_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
 % --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
@@ -85,21 +82,12 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 [file,folder] = uigetfile('*.raw*','Choose raw file');
 MRC=GoldenAngle_Recon([folder,file]) %center of kspace
-MRC.Parameter.Parameter2Read.kz=0   %only center stack
-MRC.Parameter.Parameter2Read.chan=MRC.Parameter.Parameter2Read.chan(1);
+% MRC.Parameter.Parameter2Read.kz=0   %only center stack
+MRC.Parameter.Parameter2Read.chan=MRC.Parameter.Parameter2Read.chan(10);
 MRC.Perform1;
 
-[nx,ny,nz,nc]=size(MRC.Data);
-cksp=floor(nx/2)+1;
-cnz=floor(nz/2)+1;
 
-Ts=MRC.Parameter.Scan.TR.*MRC.Parameter.Scan.Samples(3).*1e-3;
-t=[1:length(MRC.Data)].*Ts;
-
-Fs=1./Ts;
-center_signal=envelope(abs(mean(MRC.Data(cksp,:,cnz,1),4)),20,'mean');
-filt(center_signal)
-
+[center_signal,t]=filterGA(MRC)
 handles.t=t;
 handles.plotrange=[min(center_signal),max(center_signal)];
 handles.DC=center_signal;
@@ -110,10 +98,6 @@ handles.P.folder=folder;
 axes(handles.axes1);cla;
 plot(handles.t,handles.DC,'k'); xlabel('t(s)');
 guidata(hObject,handles)
-
-
-
-
 
 % --- Executes on slider movement.
 function slider1_Callback(hObject, eventdata, handles)
@@ -133,11 +117,9 @@ plot(handles.t,handles.DC,'k'); xlabel('t(s)');
 plot([handles.ValSl1,handles.ValSl1],handles.plotrange,'r')
 plot([handles.ValSl2,handles.ValSl2],handles.plotrange,'r')
 hold off
+set(handles.text2,'String',num2str(handles.ValSl1))
 
 guidata(hObject,handles);
-
-
-
 
 % --- Executes during object creation, after setting all properties.
 function slider1_CreateFcn(hObject, eventdata, handles)
@@ -171,8 +153,9 @@ plot([handles.ValSl1,handles.ValSl1],handles.plotrange,'r')
 plot([handles.ValSl2,handles.ValSl2],handles.plotrange,'r')
 hold off
 
-guidata(hObject,handles);
 
+set(handles.text3,'String',num2str(handles.ValSl2))
+guidata(hObject,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -200,3 +183,32 @@ P.spokestoread=[spoke1:spoke2].';
 P.sensitivitymaps = true;
 
 [MR,P]=GoldenAngle(P)
+
+
+% FILTERS GOLDEN ANGLE FREQUENCY FROM SIGNAL
+function [center_signal_filtered,t]=filterGA(MRC)
+
+goldenangle=MRC.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+[nx,ny,nz,nc]=size(MRC.Data);
+cksp=floor(nx/2)+1;
+cnz=floor(nz/2)+1;
+Ts=MRC.Parameter.Scan.TR.*MRC.Parameter.Scan.Samples(3).*1e-3;
+t=[1:length(MRC.Data)].*Ts;
+Fs=1./Ts;
+goldenanglefreq=(goldenangle*Fs)/(360)
+
+if license('checkout','signal_processing')==1; %if i dont have the signal processing license :( 
+    
+    f=designfilt('lowpassiir','FilterOrder',5,...
+        'PassbandFrequency',goldenanglefreq*0.7,...
+        'PassbandRipple',1,...
+        'SampleRate',Fs);
+    center_signal=abs(mean(MRC.Data(cksp,:,cnz,1),4));
+    center_signal_filtered=filtfilt(f,double(center_signal));
+else
+    center_signal=abs(mean(MRC.Data(cksp,:,cnz,1),4));
+%     center_signal=abs(mean(MRC.Data(cksp,:,:,:),3));
+    center_signal_filtered=smooth(double(center_signal),15);
+end
+    
+    

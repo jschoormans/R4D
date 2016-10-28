@@ -3,12 +3,19 @@ function [MR,P]=FullRecon_SoS_DCE(P)
 P=checkGAParams(P);
 
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
-%PARAMETERS
-[MR,P] = UpdateReadParamsMR(MR,P);
+[MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
 
 
 
-%SENSITVITIES: IF USING SENSE MAPS; READ HERE
+MR.Perform1;                        %reading and sorting data
+MR.CalculateAngles; 
+MR.PhaseShift;
+MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
+
+[nx,ntviews,ny,nc]=size(MR.Data);
+k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
+
+
 if P.sensitivitymaps == true
     if strcmp(P.sensitvitymapscalc,'sense')==1
             P.senseLargeOutput=1;
@@ -20,37 +27,34 @@ if P.sensitivitymaps == true
     else
        error('unknown sensitivity calculation method!') 
     end
+else
+    error('sense maps needed for DCE recons!')
 end
 
-%%%
-MR.Perform1;                        %reading and sorting data
-MR.CalculateAngles; 
-MR.PhaseShift;
-MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
-[nx,ntviews,ny,nc]=size(MR.Data);
-
-k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
-% angles=[0:(P.goldenangle)*(pi/180):(ntviews-1)*(P.goldenangle)*(pi/180)]; %relative angles measured (first set at 0)
-
 %%%SORTING
-disp('Sorting data into timeframes...')
 kdata=squeeze(MR.Data(:,:,:,:,1)); %select kdata for slice
-% wfull=calcDCF(k,ImSize);              % not needed for BART??
-
 nt=floor(ntviews/P.DCEparams.nspokes);              % calculate (max) number of frames
 kdatac=kdata(:,1:nt*P.DCEparams.nspokes,:,:);       % crop the data according to the number of spokes per frame
 
 
 %%
-for ii=1:nt                                         % sort the data into a time-series (maybe remove loop at later stage)
+for ii=1:nt       % sort the data into a time-series 
     kdatau(:,:,:,:,ii)=kdatac(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes,:,:); %kdatau now (nfe nspoke nslice nc nt)
     ku(:,:,ii)=double(k(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes));
+end
+
+wu=getRadWeightsGA(ku);
+clear kdatac kdata %clear memory
+
+%% get first guess 
+for selectslice=P.reconslices       % sort the data into a time-series 
+    selectslice
+    tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
+    tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     R(:,:,:,ii)=(tempE'*tempy); %first guess
 end
 R(isnan(R))=0;
 
-wu=getRadWeightsGA(ku);
-clear kdatac kdata %clear memory
 %%  L1 minimization algorithm (NLCG)
     
 P.DCEparams.lambda = 0.25*max(abs(R(:))); 

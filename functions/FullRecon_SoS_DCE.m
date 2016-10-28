@@ -5,6 +5,17 @@ P=checkGAParams(P);
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 [MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
 
+
+
+MR.Perform1;                        %reading and sorting data
+MR.CalculateAngles; 
+MR.PhaseShift;
+MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
+
+[nx,ntviews,ny,nc]=size(MR.Data);
+k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
+
+
 if P.sensitivitymaps == true
     if strcmp(P.sensitvitymapscalc,'sense')==1
             P.senseLargeOutput=1;
@@ -20,14 +31,6 @@ else
     error('sense maps needed for DCE recons!')
 end
 
-MR.Perform1;                        %reading and sorting data
-MR.CalculateAngles; 
-MR.PhaseShift;
-MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
-
-[nx,ntviews,ny,nc]=size(MR.Data);
-k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
-
 %%%SORTING
 kdata=squeeze(MR.Data(:,:,:,:,1)); %select kdata for slice
 nt=floor(ntviews/P.DCEparams.nspokes);              % calculate (max) number of frames
@@ -38,12 +41,19 @@ kdatac=kdata(:,1:nt*P.DCEparams.nspokes,:,:);       % crop the data according to
 for ii=1:nt       % sort the data into a time-series 
     kdatau(:,:,:,:,ii)=kdatac(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes,:,:); %kdatau now (nfe nspoke nslice nc nt)
     ku(:,:,ii)=double(k(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes));
+end
+
+wu=getRadWeightsGA(ku);
+clear kdatac kdata %clear memory
+
+%% get first guess 
+for selectslice=P.reconslices       % sort the data into a time-series 
+    tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
+    tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     R(:,:,:,ii)=(tempE'*tempy); %first guess
 end
 R(isnan(R))=0;
 
-wu=getRadWeightsGA(ku);
-clear kdatac kdata %clear memory
 %%  L1 minimization algorithm (NLCG)
     
 P.DCEparams.lambda = 0.25*max(abs(R(:))); 

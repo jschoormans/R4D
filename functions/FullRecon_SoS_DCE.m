@@ -1,4 +1,5 @@
 function [MR,P]=FullRecon_SoS_DCE(P)
+% DCE GOLDEN ANGLE RECONSTRUCTION
 P=checkGAParams(P);
 
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
@@ -7,7 +8,7 @@ MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 
 
 
-%SENSITVITIES (TO FIX!)
+%SENSITVITIES: IF USING SENSE MAPS; READ HERE
 if P.sensitivitymaps == true
     if strcmp(P.sensitvitymapscalc,'sense')==1
             P.senseLargeOutput=1;
@@ -19,7 +20,7 @@ end
 
 %%%
 MR.Perform1;                        %reading and sorting data
-MR.CalculateAngles;
+MR.CalculateAngles; 
 MR.PhaseShift;
 MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
 [nx,ntviews,ny,nc]=size(MR.Data);
@@ -32,18 +33,20 @@ disp('Sorting data into timeframes...')
 kdata=squeeze(MR.Data(:,:,:,:,1)); %select kdata for slice
 % wfull=calcDCF(k,ImSize);              % not needed for BART??
 
-nt=floor(ntviews/P.DCEParams.nspokes);              % calculate (max) number of frames
-kdatac=kdata(:,1:nt*P.DCEParams.nspokes,:,:);       % crop the data according to the number of spokes per frame
+nt=floor(ntviews/P.DCEparams.nspokes);              % calculate (max) number of frames
+kdatac=kdata(:,1:nt*P.DCEparams.nspokes,:,:);       % crop the data according to the number of spokes per frame
 
 for ii=1:nt                                         % sort the data into a time-series (maybe remove loop at later stage)
-    kdatau(:,:,:,:,ii)=kdatac(:,(ii-1)*P.DCEParams.nspokes+1:ii*P.DCEParams.nspokes,:,:); %kdatau now (nfe nspoke nslice nc nt)
-    ku(:,:,ii)=double(k(:,(ii-1)*P.DCEParams.nspokes+1:ii*P.DCEParams.nspokes));
-%     anglesu(:,:,ii)=angles(1,(ii-1)*P.DCEParams.nspokes+1:ii*P.DCEParams.nspokes);
+    kdatau(:,:,:,:,ii)=kdatac(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes,:,:); %kdatau now (nfe nspoke nslice nc nt)
+    ku(:,:,ii)=double(k(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes));
+%     anglesu(:,:,ii)=angles(1,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes);
 end
 
 % wu=getRadWeightsGA(ku);
 
 %% BART CS
+%CHANGE TO CG MCNUFFT RECON?
+
 res=MR.Parameter.Encoding.XRes(1);
 pause(5);
 coords=RadTraj2BartCoords(ku,res);

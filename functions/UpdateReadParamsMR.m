@@ -60,8 +60,8 @@ else
 end
 
 if strcmp(P.recontype,'DCE')
-    P.DCEParams.nspokes=check_golden_angle(P.goldenangle,P.DCEParams.nspokes);
-    P.DCEParams.TimeResolution=P.DCEParams.nspokes*MR.Parameter.Labels.ScanDuration/MR.Parameter.Labels.Samples(2); %recalculate time resolution
+    P.DCEparams.nspokes=check_golden_angle(P.goldenangle,P.DCEparams.nspokes);
+    P.DCEparams.TimeResolution=P.DCEparams.nspokes*MR.Parameter.Labels.ScanDuration/MR.Parameter.Labels.Samples(2); %recalculate time resolution
  end
    
 

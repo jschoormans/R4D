@@ -73,13 +73,13 @@ if isfield(P,'sensitivitymaps')
             if strcmp(P.recontype,'3D')
                 P.dynamicespirit=false; %3D; no dynamic espirit anyway
             else
-                disp('Warning: dynamic espirit automatically selected!')
-                P.dynamicespirit=true;
+                disp('Warning: non-dynamic espirit automatically selected!')
+                P.dynamicespirit=false;
             end
         end
     end
 else
-    P.sensitivitymaps=false;
+    P.sensitivitymaps=true;
 end
 
 if ~strcmp(P.recontype,'3D') && P.sensitivitymaps==false; 
@@ -110,9 +110,21 @@ end
 
 % DCE RECONS
 if strcmp(P.recontype,'DCE')
-    if ~isfield(P.DCEParams,'nspokes')
+    if ~isfield(P,'DCEparams') %initialize DCE params field
+        P.DCEparams=struct();
+    end
+    if ~isfield(P.DCEparams,'nspokes')
         error('specify number of spokes used for DCE frames! in P.DCEParams.nspokes')
     end
+    if ~isfield(P.DCEparams,'nite')
+        P.DCEparams.nite=25;
+    end
+    if ~isfield(P.DCEparams,'Beta')
+        P.DCEparams.Beta='LS'
+    end
+    
+    
+    
 end
 
 if ~isfield(P,'debug') 

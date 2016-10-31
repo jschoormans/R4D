@@ -8,7 +8,7 @@ switch P.type3D
         [MR,P] = UpdateReadParamsMR(MR,P);
         
         if P.sensitivitymaps == true
-                        OutputSizeSensitivity=[MR.Parameter.Encoding.XReconRes,MR.Parameter.Encoding.YReconRes,MR.Parameter.Encoding.ZReconRes];
+            OutputSizeSensitivity=P.reconresolution; %what if data is not same length as this resolution??
             P.senseLargeOutput=1;
             run FullRecon_SoS_sense.m;
         end
@@ -18,9 +18,14 @@ switch P.type3D
         MR.PhaseShift;
         [nx,ntviews,nz,nc]=size(MR.Data);
         goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
-%         wu=calcDCF(k,MR.Parameter.Encoding.XReconRes);
-        wu=getRadWeightsGA(k);
+        
+        angleshift=(pi/180)*double(MR.Parameter.Parameter2Read.ky(1))*goldenangle; %angle of first profile
+        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle,angleshift);
+        
+        
+        
+        wu=calcDCF(k,MR.Parameter.Encoding.XReconRes);
+%         wu=getRadWeightsGA(k);
         kdata=ifft(MR.Data,[],3);
         
         for selectslice=P.reconslices
@@ -72,7 +77,9 @@ switch P.type3D
         MR.PhaseShift;
         [nx,ntviews,nz,nc]=size(MR.Data);
         goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+        
+        angleshift=(pi/180)*(MR.Parameter.Parameter2Read.ky(1)); %angle of first profile
+        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle,angleshift);
         kdata=ifft(MR.Data,[],3);
         res=MR.Parameter.Encoding.XRes(1);
         coordsfull=RadTraj2BartCoords(k,res);
@@ -133,7 +140,8 @@ switch P.type3D
         MR.PhaseShift;
         [nx,ntviews,nz,nc]=size(MR.Data);
         goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
+        angleshift=(pi/180)*(MR.Parameter.Parameter2Read.ky(1)); %angle of first profile
+        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle,angleshift);
         kdata=ifft(MR.Data,[],3);
         res=MR.Parameter.Encoding.XRes(1);
         coordsfull=RadTraj2BartCoords(k,res);

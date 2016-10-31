@@ -22,6 +22,8 @@ if isfield(P,'espiritoptions')
     disp('espirit options:')
 P.espiritoptions
 end
+
+fprintf('first spoke %d, last spoke: %d',P.spokestoread(1),P.spokestoread(end))
 fprintf('Golden-angle Stack-of-Stars Finished!\n')
 diary off
 end

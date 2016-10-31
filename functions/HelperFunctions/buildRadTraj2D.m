@@ -1,6 +1,6 @@
 %=========================================================================
 % Create radial trajectory for NUFFT
-function k = buildRadTraj2D(no_samples, no_profiles, alt_prof, gafl, normfl, dim_t, t_offset, dim_z, z_offset,tga)
+function k = buildRadTraj2D(no_samples, no_profiles, alt_prof, gafl, normfl, dim_t, t_offset, dim_z, z_offset,tga,angleshift)
 %==========================================================================
 % Returns radial trajectory in a complex valued data array. The real part
 % corresponds to the x- and the imaginary part to y-component respectively.
@@ -17,7 +17,7 @@ function k = buildRadTraj2D(no_samples, no_profiles, alt_prof, gafl, normfl, dim
 % dim_z:        Number of slices in z-direction.
 % z_offset:     Profile offset between two adjacent slices.
 %   tga:           tiny golden angle value
-%
+% angleshift:   angle of first measurements
 % Outputs:
 % --------
 % k:            k-space coordinates.
@@ -31,8 +31,9 @@ function k = buildRadTraj2D(no_samples, no_profiles, alt_prof, gafl, normfl, dim
 
 % Check input
 %--------------------------------------------------------------------------
-narginchk(3,10);
+narginchk(3,11);
 
+if nargin<11|| isempty(angleshift); angleshift=0; end
 if nargin<10|| isempty(tga); tga=false; end
 if nargin<9 || isempty(z_offset), z_offset = 0; end
 if nargin<8 || isempty(dim_z),    dim_z    = 1; end
@@ -62,7 +63,7 @@ for z=1:dim_z
     for t=1:dim_t
         for i=1:no_profiles
             % Update rotation matrix
-            rot_angle = ((i-1)+(t-1)*t_offset+(z-1)*z_offset)*dPhi;
+            rot_angle = ((i-1)+(t-1)*t_offset+(z-1)*z_offset)*dPhi+double(angleshift);
             if alt_prof && ~mod(i,2)
                 rot_angle = rot_angle+pi;
             end

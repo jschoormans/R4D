@@ -7,12 +7,21 @@ fprintf('Saving parameters to text file...\n');
 
 
 
-diary(P.filename)
+diary([P.filename,'.txt'])
 diary on 
 P
-P.CS
+if isfield(P,'DCEparams')
+    disp('DCE options:')
+    P.DCEparams
+end
+if isfield(P,'CS')
+    disp('CS options:')
+    P.CS
+end
+if isfield(P,'espiritoptions')
+    disp('espirit options:')
 P.espiritoptions
-P.reconslices
+end
 fprintf('Golden-angle Stack-of-Stars Finished!\n')
 diary off
 end

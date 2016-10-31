@@ -36,19 +36,19 @@ function [MR,P] = GoldenAngle(varargin);
 % P.binparams           %structure of parameters to use for binning (see ksp2frames)
 
 % P.DCEparams
+   %outeriter/ niter
+   %Beta : CG update parameter
+   %nspokes
+   %display
+   %GUI=false
 
 % P.debug=1;            %set debug level
 
 % TO DO IN FUTURE (IDEAS)
-% P.DCEsettings %settings for DCE recons
 % k-space shift correction
 % whats up with sense maps in 3D Gyrotools gridding?
-% BART nufft/ Fessler NUFFT for 3D?
 % make sure that orientations are correct
-% P.CS settings 
 % tryto add weights to bart CS
-% Remove slice oversampling 
-% maybe build in DCE in 4D part instead of into NUFFT?
 % add interpolation to finer resolution in last step
 % automatic coil selection (remove noise-only coils robustly)
 
@@ -79,7 +79,11 @@ switch P.recontype
     case '4D';  disp('4D reconstruction');
         [MR,P]=FullRecon_SoS_4D(P);
     case 'DCE'; disp('DCE reconstruction (not yet implemented...');
-        [MR,P]=FullRecon_SoS_DCE(P);
+        if P.DCEparams.GUI==false
+        [MR,P]=FullRecon_SoS_DCE(P); %run standard DCE recon with provided settings
+        else %run GUI to choose spokes/settings based on signal 
+        run DCE_inflow;     %TO DO: output MR,P from GUI
+        end
     case '5D';  disp('5D reconstruction (multiple echoes)');
         [MR,P]=FullRecon_SoS_5D(P);
     case '3D';  disp('Performing full 3D golden angle stack-of-stars reconstruction...');

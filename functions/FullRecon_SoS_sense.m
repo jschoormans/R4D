@@ -64,7 +64,7 @@ switch P.sensitvitymapscalc
         coords(3,:,:,:)=zeros(size(k(:,:,:)));
         size(coords)
         
-        for sl=1:ny
+        for sl=P.reconslices
             ksp2_permuted=permute(MR.Data(:,:,sl,:),[3 1 2 4]); %PERMUTE STACK OF STARS KSPACE
             Im2=bart('nufft -i -t -d24:24:1',coords,ksp2_permuted);
             

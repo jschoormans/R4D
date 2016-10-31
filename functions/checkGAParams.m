@@ -118,8 +118,12 @@ if strcmp(P.recontype,'DCE')
         error('specify number of spokes used for DCE frames! in P.DCEParams.nspokes')
     end
     if ~isfield(P.DCEparams,'nite')
-        P.DCEparams.nite=25;
+        P.DCEparams.nite=8;
     end
+    if ~isfield(P.DCEparams,'outeriter')
+        P.DCEparams.outeriter=4;
+    end
+    
     if ~isfield(P.DCEparams,'Beta')
         P.DCEparams.Beta='LS'
     end
@@ -128,7 +132,18 @@ if strcmp(P.recontype,'DCE')
     end
     
     P.DCEparams.W = TV_Temp();
+    
+    if ~isfield(P.DCEparams,'enableTGV')
+        P.DCEparams.enableTGV=0;
+    end
+    
+    if P.DCEparams.enableTGV==1
     P.DCEparams.W2 = TV2_Temp();
+    end
+    
+    if ~isfield(P.DCEparams,'GUI')
+        P.DCEparams.GUI=false;
+    end
     
 end
 

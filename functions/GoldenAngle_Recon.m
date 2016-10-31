@@ -35,8 +35,14 @@ classdef GoldenAngle_Recon < MRecon
             disp('Calculating angles...')
             goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
             Npe=MR.Parameter.Scan.Samples(2); %number of phase-encoding lines
+            
+            if MR.Parameter.Parameter2Read.ky(1)==0
             angles=[0:(goldenangle)*(pi/180):(Npe-1)*(goldenangle)*(pi/180)]; %relative angles measured (first set at 0)
-    
+            else
+                angleshift=(double(MR.Parameter.Parameter2Read.ky(1))*goldenangle)*(pi/180);
+                angles=[angleshift:(goldenangle)*(pi/180):(Npe-1)*(goldenangle)*(pi/180)+angleshift]; %relative angles measured (first set at 0)
+            end
+            
             MR.Parameter.Gridder.RadialAngles=angles';
         end
         

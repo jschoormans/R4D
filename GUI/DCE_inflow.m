@@ -34,6 +34,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
+   
 end
 
 if nargout
@@ -83,7 +84,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 [file,folder] = uigetfile('*.raw*','Choose raw file');
 MRC=GoldenAngle_Recon([folder,file]) %center of kspace
 % MRC.Parameter.Parameter2Read.kz=0   %only center stack
-MRC.Parameter.Parameter2Read.chan=MRC.Parameter.Parameter2Read.chan(10);
+MRC.Parameter.Parameter2Read.chan=MRC.Parameter.Parameter2Read.chan(1);
 MRC.Perform1;
 
 
@@ -150,11 +151,11 @@ axes(handles.axes1);cla;
 hold on 
 plot(handles.t,handles.DC,'k'); xlabel('t(s)');
 plot([handles.ValSl1,handles.ValSl1],handles.plotrange,'r')
-plot([handles.ValSl2,handles.ValSl2],handles.plotrange,'r')
+plot([handles.ValSl2,handles.ValSl2],handles.plotrange,'b')
 hold off
 
 
-set(handles.text3,'String',num2str(handles.ValSl2))
+% set(handles.text3,'String',num2str(handles.ValSl2))
 guidata(hObject,handles);
 
 
@@ -171,14 +172,14 @@ end
 
 
 % --- Executes on button press in pushbutton2.
-function pushbutton2_Callback(hObject, eventdata, handles)
+function varargout=pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 P=handles.P;
-spoke1=find(handles.t-handles.ValSl1>0,1,'first')-1;
-spoke2=find(handles.t-handles.ValSl2>0,1,'first')-1;
+spoke1=find(handles.t-handles.ValSl1>0,1,'first')-1
+spoke2=find(handles.t-handles.ValSl2>0,1,'first')-1
 P.spokestoread=[spoke1:spoke2].';
 P.sensitivitymaps = true;
 

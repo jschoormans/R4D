@@ -5,8 +5,6 @@ P=checkGAParams(P);
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 [MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
 
-
-
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles; 
 MR.PhaseShift;
@@ -48,6 +46,7 @@ clear kdatac kdata %clear memory
 
 %% get first guess 
 for selectslice=P.reconslices       % sort the data into a time-series 
+    selectslice
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     R(:,:,:,ii)=(tempE'*tempy); %first guess
@@ -63,13 +62,17 @@ for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     
     fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
-    recon_cs(:,:,selectslice,:) = CSL1NlCg_experimental(squeeze(R(:,:,selectslice,:)),P.DCEparams,tempy,tempE,selectslice);
+    
+    res=squeeze(R(:,:,selectslice,:));
+    for outeriter=1:P.DCEparams.outeriter
+    res=CSL1NlCg_experimental(res,P.DCEparams,tempy,tempE,selectslice); end
+    recon_cs(:,:,selectslice,:) = res; 
     
     voxelsize=MR.Parameter.Scan.AcqVoxelSize
     description='description'
-    cd(resultsfolder)
+    cd(P.resultsfolder)
     nii=make_nii(abs(flip((permute(recon_cs,[2 1 3 4])))),voxelsize,[],[],description);
-    save_nii(nii,strcat(filename,'CS_N_FR','.nii'))
+    save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 end
 

@@ -148,7 +148,7 @@ switch P.type3D
         reco_cs=zeros(res,res,length(P.reconslices));
         
         for slice=P.reconslices
-            slice
+            fprintf('%d - ',slice)
             fprintf('Recon slice %d of %d.',slice,size(kdata,3))
             ksp_acq=(kdata(:,:,slice,:));
             ksp_acq_t=permute(ksp_acq,[3 1 2 4]);
@@ -169,13 +169,13 @@ switch P.type3D
             
             bartoptions=['nufft -i -t -l0.01'];
             dummy=bart(bartoptions, coordsfull, ksp_acq_t);
-            dummy=dummy.*sensbart
+            dummy=dummy.*sensbart;
             dummy=bart('rss 8',dummy);
             reco_cs(:,:,slice,:)=squeeze(dummy);
             
             if true
-                cd(P.resultsfolder)
-                voxelsize=MR.Parameter.Scan.AcqVoxelSize
+                cd(P.resultsfolder);
+                voxelsize=MR.Parameter.Scan.AcqVoxelSize;
                 nii=make_nii(abs(permute(flip(squeeze(reco_cs),1),[2 1 3 4 5])),voxelsize,[],[],'');
                 save_nii(nii,strcat(P.filename,'.nii'))
             end

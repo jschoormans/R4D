@@ -58,7 +58,7 @@ classdef GoldenAngle_Recon < MRecon
             for nechoes=1:size(MR.Data,7)
             for nc=1:size(MR.Data,4)
                 for nz=floor(size(MR.Data,3)/2)+1;
-                    nc
+                    fprintf('%d -',nc)
                     y=unwrap(angle(MR.Data(cksp,:,nz,nc))); %phase of center of k-space (with corrected k: find closest to zero?!?!)
                     Gx=1;Gy=1;
                     x=[ones(size(anglesrad))',Gx.*cos(anglesrad'),Gy.*sin(anglesrad')];

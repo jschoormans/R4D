@@ -48,7 +48,7 @@ clear kdatac kdata %clear memory
 %% get first guess 
 disp('First guess')
 for selectslice=P.reconslices       % sort the data into a time-series 
-    fprintf('%d',selectslice)
+    fprintf('%d - ',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     R(:,:,selectslice,:)=(tempE'*tempy); %first guess
@@ -73,7 +73,7 @@ for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     voxelsize=MR.Parameter.Scan.AcqVoxelSize
     description='description'
     cd(P.resultsfolder)
-    nii=make_nii(squeeze(abs(flip((permute(recon_cs,[2 1 3 4]))))),voxelsize,[],[],description);
+    nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,P.reconslices(1):selectslice,:),[2 1 3 4]))))),voxelsize,[],[],description);
     save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 end

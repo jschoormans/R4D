@@ -58,7 +58,7 @@ disp(' \____/\___/|_|\__,_|\___|_| |_\_| |_/_| |_|\__, |_|\___|')
 disp('                                             __/ |       ')
 disp('                                            |___/        ')
 fprintf ('Golden-angle stack-of-stars reconstruction\n')
-fprintf('V1.0\n\n')
+fprintf('V1.1\n ISMRM 2017 \n')
 fprintf('J Schoormans - AMC Amsterdam - July 2016\n')
 disp('--------------------------------------------------------------')
 tic

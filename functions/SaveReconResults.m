@@ -23,7 +23,11 @@ if isfield(P,'espiritoptions')
 P.espiritoptions
 end
 
+if isfield(P,'spokestoread')
 fprintf('first spoke %d, last spoke: %d',P.spokestoread(1),P.spokestoread(end))
-fprintf('Golden-angle Stack-of-Stars Finished!\n')
+else
+    fprintf('all spokes used')
+end
+    fprintf('Golden-angle Stack-of-Stars Finished!\n')
 diary off
 end

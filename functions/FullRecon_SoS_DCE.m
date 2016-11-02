@@ -17,6 +17,7 @@ k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
 if P.sensitivitymaps == true
     if strcmp(P.sensitvitymapscalc,'sense')==1
             P.senseLargeOutput=1;
+            OutputSizeSensitivity=P.reconresolution; %what if data is not same length as this resolution??
             run FullRecon_SoS_sense.m;
             sens=MR_sense.Sensitivity;
             clear MR_sense;
@@ -45,11 +46,12 @@ wu=getRadWeightsGA(ku);
 clear kdatac kdata %clear memory
 
 %% get first guess 
+disp('First guess')
 for selectslice=P.reconslices       % sort the data into a time-series 
-    selectslice
+    fprintf('%d',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
-    R(:,:,:,ii)=(tempE'*tempy); %first guess
+    R(:,:,selectslice,:)=(tempE'*tempy); %first guess
 end
 R(isnan(R))=0;
 
@@ -71,7 +73,7 @@ for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     voxelsize=MR.Parameter.Scan.AcqVoxelSize
     description='description'
     cd(P.resultsfolder)
-    nii=make_nii(abs(flip((permute(recon_cs,[2 1 3 4])))),voxelsize,[],[],description);
+    nii=make_nii(squeeze(abs(flip((permute(recon_cs,[2 1 3 4]))))),voxelsize,[],[],description);
     save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 end

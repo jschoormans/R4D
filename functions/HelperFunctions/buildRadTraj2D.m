@@ -16,7 +16,7 @@ function k = buildRadTraj2D(no_samples, no_profiles, alt_prof, gafl, normfl, dim
 % t_offset:     Profile offset between two adjacent time frames.
 % dim_z:        Number of slices in z-direction.
 % z_offset:     Profile offset between two adjacent slices.
-%   tga:           tiny golden angle value
+% tga:           tiny golden angle value
 % angleshift:   angle of first measurements
 % Outputs:
 % --------

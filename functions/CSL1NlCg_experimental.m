@@ -87,7 +87,7 @@ while(1)
 	if param.Secant==0
     while (f1 > f0 - alpha*t*abs(g0(:)'*dx(:)))^2 & (lsiter<maxlsiter)
 		lsiter = lsiter + 1;
-		t = t * beta;
+		t = t * beta
 		[f1,L2Obj,L1Obj,L1Obj2] = objective(x,dx,t,param);
     end
     else %SECANT LINE SEARCH

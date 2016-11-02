@@ -12,45 +12,41 @@ function [MR,P] = GoldenAngle(varargin);
 % P.resultsfolder       %full path of folder where results should be saved
 % P.coil_survey         %filename of coil_survey file
 % P.sense_ref           %filename of sense_ref file
-% 
+% P.filename            %name used to save the recons
+
 % P.recontype           %'3D'; 'DCE'; '4D' ; '5D'(multiple echoes)  (standard:3D)
-% 
+
 % P.sensitivitymaps     %1/0 use of sense maps for coil combinations (true)
 % P.sensitvitymapscalc  %way of calculating sensitivity maps: sense (standard)/espirit
 % P.dynamicespirit      %true(4D)/false(3D) (TO DO put in espiritoptions!)
 % P.espiritoptions.nmaps %number of maps to compute and use
-% 
+
 % P.channelcompression  %true/false: standard false
 % P.cc_nrofchans        %number of channels used for compression
 % P.spokestoread        %vector specifiying channel numbers to use (standard:all)
 % P.channelstoread      %vector specifying spokes to read (standard:all)
 % P.reconresolution     %vector of matrix size (x,y,z)
-% P.reconslices=[vector] %vector of slices to reconstruct (1 to max)
-% empty=all slices (only for 4D and 5D)
+% P.reconslices=[vector] %vector of slices to reconstruct (1 to max) empty=all slices (only for 4D and 5D)
 
 % P.CS.iter
 % P.CS.reg
 % P.flyback
-% P.type3D  1/2/3
+% P.type3D  1/2/3/4/5 (different recon methods) (IN PROGRESS)
 
-% P.binparams           %structure of parameters to use for binning (see ksp2frames)
+% P.binparams           %structure of parameters to use for binning (see ksp2frames, standalone function)
 
 % P.DCEparams
    %outeriter/ niter
-   %Beta : CG update parameter
+   %Beta : CG update parameter {'FR','PR','PR_restart','LS','LS_restart','MLS','HHS','HZ'}
    %nspokes
    %display
    %GUI=false
 
-% P.debug=1;            %set debug level
+% P.debug=1;            %set debug level/will results in various plots during recon
 
 % TO DO IN FUTURE (IDEAS)
 % k-space shift correction
-% whats up with sense maps in 3D Gyrotools gridding?
-% make sure that orientations are correct
-% tryto add weights to bart CS
 % add interpolation to finer resolution in last step
-% automatic coil selection (remove noise-only coils robustly)
 
 disp('--------------------------------------------------------------')
 disp(' _____       _     _             ___              _      ')

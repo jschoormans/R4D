@@ -113,9 +113,12 @@ end
 if strcmp(P.recontype,'DCE')
     if ~isfield(P,'DCEparams') %initialize DCE params field
         P.DCEparams=struct();
+        error('five DCEparams in P.DCEparams')
     end
     if ~isfield(P.DCEparams,'nspokes')
-        error('specify number of spokes used for DCE frames! in P.DCEParams.nspokes')
+        error('specify number of spokes used for DCE frames! in P.DCEparams.nspokes')
+    elseif P.DCEparams.nspokes==[]
+        error('specify number of spokes used for DCE frames! in P.DCEparams.nspokes')
     end
     if ~isfield(P.DCEparams,'nite')
         P.DCEparams.nite=8;

@@ -6,4 +6,4 @@ coords(3,:,:,:)=zeros(size(k(:,:,:)));
 coords=permute(coords,[1 2 3 5 6 7 8 9 10 11 4]);
 
 
-end
+end  

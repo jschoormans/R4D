@@ -3,6 +3,7 @@ function [MR,P]=FullRecon_SoS_4D(P)
 
 % SENSE maps
 if P.sensitivitymaps == true && strcmp(P.sensitvitymapscalc,'sense')==1
+    OutputSizeSensitivity=[MR.Parameter.Encoding.XRes,MR.Parameter.Encoding.XRes,MR.Parameter.Encoding.ZRes]
     P.senseLargeOutput=1
     run FullRecon_SoS_sense.m;
     sens=MR_sense.Sensitivity;
@@ -14,7 +15,7 @@ pause(5);
 coords=RadTraj2BartCoords(ku,res);
 coordsfull=RadTraj2BartCoords(k,res);
 %
-reco_cs=zeros(res,res,length(P.reconslices),P.binparams.nBins);
+reco_cs=zeros(res,res,max(P.reconslices),P.binparams.nBins);
 for slice=P.reconslices
     fprintf('Recon slice %d of %d.',slice,size(kdatau,3))
     ksp_acq=(kdatau(:,:,slice,:,:));

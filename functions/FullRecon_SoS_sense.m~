@@ -21,6 +21,7 @@ switch P.sensitvitymapscalc
         if P.senseLargeOutput==1; %make sense maps larger
             MR_sense.Rotate=0;
             MR_sense.MatchTargetSize=1;
+            OutputSizeSensitivity=P.reconresolution;
             MR_sense.OutputSizeReformated=OutputSizeSensitivity; %give option to choose these?
             MR_sense.OutputSizeSensitivity=OutputSizeSensitivity;
         end
@@ -55,7 +56,8 @@ switch P.sensitvitymapscalc
 
         
     case 'espirit'
-        %todo...
+        [nx,ntviews,ny,nc]=size(MR.Data);
+        k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
         res=MR.Parameter.Encoding.XReconRes;
         clear coords
         coords(1,:,:,:)=real((k(:,:,:))).*res;
@@ -63,7 +65,7 @@ switch P.sensitvitymapscalc
         coords(3,:,:,:)=zeros(size(k(:,:,:)));
         size(coords)
         
-        for sl=1:ny
+        for sl=P.reconslices
             ksp2_permuted=permute(MR.Data(:,:,sl,:),[3 1 2 4]); %PERMUTE STACK OF STARS KSPACE
             Im2=bart('nufft -i -t -d24:24:1',coords,ksp2_permuted);
             

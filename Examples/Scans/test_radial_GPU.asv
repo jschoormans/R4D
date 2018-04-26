@@ -1,0 +1,37 @@
+clear
+load radial_testdata
+%% make one frame 
+k=[]; w=[];data=[];
+for i=1:52
+    k=cat(2,k,ku(:,:,i));
+    w=cat(2,w,wu(:,:,i));
+    data=cat(2,data,tempy(:,:,:,i));
+end;
+%% CPU Recon
+NUFFTCPU=MCNUFFT(k,sqrt(w),sensmap);
+tic
+rCPU=(NUFFTCPU'*data); %first guess
+tCPU=toc; 
+%%
+disp('Generate NUFFT Operator without coil sensitivities');
+osf = 2; % oversampling: 1.5 1.25
+wg = 3; % kernel width: 5 7
+sw = 8; % parallel sectors' width: 12 16
+imwidth = 320;
+
+NUFFTGPU = gpuNUFFT([real(col(ku(:,:,1))), imag(col(ku(:,:,1)))]',col(wu(:,:,1)),osf,wg,sw,[imwidth,imwidth],sensmap,true);
+ktemp=tempy(:,:,:,1);
+
+tic 
+rGPU=NUFFTGPU'*ktemp(:);
+toc
+
+%%
+
+figure(1)
+
+subplot(211)
+imshow(abs(rCPU),[])
+title([CPU ])
+subplot(212)
+imshow(abs(rGPU),[])

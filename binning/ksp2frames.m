@@ -97,7 +97,7 @@ end
 %2. SORT THE gating_signal IN BINS
 
 %2B: SORTING IN BINS
-[ksp_sorted,k_sorted,~,indexphase] = sort_in_bins(gating_signal_os_s,ksp2,k,params);
+[ksp_sorted,k_sorted,phaseval,indexphase] = sort_in_bins(gating_signal_os_s,ksp2,k,params);
 
 
 %2D: VISUALIZE

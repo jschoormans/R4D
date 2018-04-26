@@ -33,7 +33,9 @@ classdef GoldenAngle_Recon < MRecon
         end
         function CalculateAngles(MR)
             disp('Calculating angles...')
-            goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+            goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
+%             goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+
             Npe=MR.Parameter.Scan.Samples(2); %number of phase-encoding lines
             
             if MR.Parameter.Parameter2Read.ky(1)==0
@@ -75,8 +77,11 @@ classdef GoldenAngle_Recon < MRecon
             disp('Gridding data...')
             MR.GridderCalculateTrajectory;
             MR.Parameter.Gridder.AlternatingRadial='no';
-            [nx,ntviews,nz,nc]=size(MR.Data);
-            goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+            [nx,ntviews,nz,nc]=size(MR.Data);            
+            
+%             goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+            goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
+
             k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
             wu=calcDCF(k,MR.Parameter.Encoding.XReconRes); %calculate better weights 
             MR.Parameter.Gridder.Weights=wu;

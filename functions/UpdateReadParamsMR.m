@@ -3,8 +3,11 @@ function [MR,P] = UpdateReadParamsMR(MR,P)
 
 %% CHECK GOLDEN ANGLE
 if ~isfield(P,'goldenangle')
-% P.goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-P.goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
+    try 
+        P.goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+    catch
+        P.goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
+    end
 end
 
 if isfield(P,'channelstoread')

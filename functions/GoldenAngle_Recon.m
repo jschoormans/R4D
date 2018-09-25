@@ -33,9 +33,12 @@ classdef GoldenAngle_Recon < MRecon
         end
         function CalculateAngles(MR)
             disp('Calculating angles...')
-            goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
-%             goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-
+            try 
+                goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
+            catch
+                goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+            end
+            
             Npe=MR.Parameter.Scan.Samples(2); %number of phase-encoding lines
             
             if MR.Parameter.Parameter2Read.ky(1)==0

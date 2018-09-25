@@ -17,7 +17,8 @@ function [MR,P] = GoldenAngle(varargin);
 % P.recontype           %'3D'; 'DCE'; '4D' ; '5D'(multiple echoes)  (standard:3D)
 
 % P.sensitivitymaps     %1/0 use of sense maps for coil combinations (true)
-% P.sensitvitymapscalc  %way of calculating sensitivity maps: sense (standard)/espirit
+% P.sensitvitymapscalc  %way of calculating sensitivity maps: sense
+% (standard)/espirit/openadapt
 % P.dynamicespirit      %true(4D)/false(3D) (TO DO put in espiritoptions!)
 % P.espiritoptions.nmaps %number of maps to compute and use
 

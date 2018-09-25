@@ -21,7 +21,7 @@ if P.sensitivitymaps == true
             run FullRecon_SoS_sense.m;
             sens=MR_sense.Sensitivity;
             clear MR_sense;
-    elseif strcmp(P.sensitvitymapscalc,'espirit')==1
+    elseif strcmp(P.sensitvitymapscalc,'espirit')==1|strcmp(P.sensitvitymapscalc,'openadapt')
         run FullRecon_SoS_sense.m;
     else
        error('unknown sensitivity calculation method!') 
@@ -59,7 +59,7 @@ R(isnan(R))=0;
     
 P.DCEparams.lambda = 0.25*max(abs(R(:))); 
 for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
-
+    
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     
@@ -67,15 +67,16 @@ for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     
     res=squeeze(R(:,:,selectslice,:));
     for outeriter=1:P.DCEparams.outeriter
-    res=CSL1NlCg_experimental(res,P.DCEparams,tempy,tempE,selectslice); end
-    recon_cs(:,:,selectslice,:) = res; 
+        res=CSL1NlCg_experimental(res,P.DCEparams,tempy,tempE,selectslice); 
+    end
+    recon_cs(:,:,selectslice,:) = res;
     
     voxelsize=MR.Parameter.Scan.AcqVoxelSize
     description='description'
     cd(P.resultsfolder)
     nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,P.reconslices(1):selectslice,:),[2 1 3 4]))))),voxelsize,[],[],description);
     save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
-
+    
 end
 
 

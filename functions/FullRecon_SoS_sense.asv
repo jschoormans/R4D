@@ -86,7 +86,7 @@ switch P.sensitvitymapscalc
         weighted_data=bsxfun(@times,kdata,sqrt(w));
         NUFFTOP=NUFFT(k,sqrt(w),1,0,[res res],2);
 
-        fprintf('calculating separate coil/slice images for openadapt...\n')
+        %calculating separate coil/slice images for openadapt..
         tic
         for selectslice=P.reconslices       % sort the data into a time-series
             fprintf('%d - ',selectslice)
@@ -97,7 +97,7 @@ switch P.sensitvitymapscalc
         toc
         
         fprintf('Running openadapt...\n')
-        [~, ~, sens] = openadapt(zerofill);
+        [im, cmap, sens_oa] = openadapt(zerofill);
         fprintf('Finished.\n')
 
         

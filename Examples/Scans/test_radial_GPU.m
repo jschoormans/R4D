@@ -1,4 +1,5 @@
 clear
+addpath(genpath('C:\Users\jschoormans\gpuNUFFT-master'))
 load radial_testdata
 %% make one frame 
 k=[]; w=[];data=[];
@@ -11,7 +12,7 @@ end;
 NUFFTCPU=MCNUFFT(k,sqrt(w),sensmap);
 tic
 for i=1:10
-rCPU=(NUFFTCPU'*data); %first guess
+rCPU=(NUFFTCPU'*data); %first guessgpunufft
 end
 tCPU=toc; 
 

@@ -15,11 +15,11 @@ k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
 
 
 if P.sensitivitymaps == true
-    if strcmp(P.sensitvitymapscalc,'sense')==1
+    if strcmp(P.sensitvitymapscalc,'sense')==1|strcmp(P.sensitvitymapscalc,'sense2')==1
             P.senseLargeOutput=1;
             OutputSizeSensitivity=P.reconresolution; %what if data is not same length as this resolution??
             run FullRecon_SoS_sense.m;
-            sens=MR_sense.Sensitivity;
+%             sens=MR_sense.Sensitivity; %??
             clear MR_sense;
     elseif strcmp(P.sensitvitymapscalc,'espirit')==1|strcmp(P.sensitvitymapscalc,'openadapt')
         run FullRecon_SoS_sense.m;
@@ -61,7 +61,22 @@ P.DCEparams.lambda = 0.25*max(abs(R(:)));
 for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
-    tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    
+    if ~P.GPU 
+        tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    else 
+        disp('Generate GPU NUFFT Operator');
+        osf = 2; % oversampling: 1.5 1.25
+        wg = 3; % kernel width: 5 7
+        sw = 12; % parallel sectors' width: 12 16
+        res = size(sens,1); 
+        
+        w=getRadWeightsGA(ku);
+        tempE = MDgpuNUFFT(ku,w,osf,wg,sw,[res,res,1],[],true);
+        
+        
+    end
+    
     
     fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
     

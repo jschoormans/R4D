@@ -155,4 +155,9 @@ if ~isfield(P,'debug')
 end
 
 
+if ~isfield(P,'GPU') 
+    P.GPU=0; %debug level 
+end
+
+
 

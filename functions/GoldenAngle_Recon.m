@@ -82,11 +82,14 @@ classdef GoldenAngle_Recon < MRecon
             MR.Parameter.Gridder.AlternatingRadial='no';
             [nx,ntviews,nz,nc]=size(MR.Data);            
             
-%             goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
-            goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
-
+            try
+            goldenangle=MR.Parameter.GetValue('`EX_ACQ_radial_golden_ang_angle');
+            catch            
+                goldenangle=MR.Parameter.GetValue('`CSC_golden_angle');
+            end
             k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],goldenangle);
-            wu=calcDCF(k,MR.Parameter.Encoding.XReconRes); %calculate better weights 
+            %             wu=calcDCF(k,MR.Parameter.Encoding.XReconRes); %calculate better weights
+            wu=getRadWeightsGA(k);
             MR.Parameter.Gridder.Weights=wu;
             MR.GridData;
 

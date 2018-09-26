@@ -3,6 +3,34 @@
 %coil survey scans or sense ref scans
 
 switch P.sensitvitymapscalc
+    case 'sense2'
+        
+        disp('using SENSE maps...')
+            
+            tic
+            MR2=GoldenAngle_Recon(strcat(P.folder,P.file));
+            MR2.Parameter.Parameter2Read.ky=[0:1:200]'; %not necessary to load all data;
+            MR2.Perform1; MR2.PerformGrid;
+            MR2.RemoveOversampling; 
+            toc
+
+            %MR2.RemoveOversampling;
+%             MR_sense = MRsense(sense_ref,MR2,coil_survey);
+            MR_sense = MRsense([P.folder,P.coil_survey],MR2);
+            MR_sense.Smooth=1;
+            MR_sense.Extrapolate=1;
+            MR_sense.Mask=1;
+            MR_sense.Rotate=0;
+            MR_sense.MatchTargetSize=1;
+            %MR_sense.RemoveMOversampling=1;
+            MR_sense.OutputSizeReformated=OutputSizeSensitivity;
+            MR_sense.OutputSizeSensitivity=OutputSizeSensitivity;
+            disp('MRSense Perform...')
+            MR_sense.Perform;
+            sens=conj(flipdim(MR_sense.Sensitivity,1));
+            sens=double(sens);%./max(sens(:));
+            clear MR2; clear MR_sense;
+    
     case 'sense'
         disp('Initializing MRSense...')
         MRref=MRecon(fullfile(P.folder,P.sense_ref));        

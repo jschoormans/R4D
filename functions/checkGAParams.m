@@ -159,5 +159,15 @@ if ~isfield(P,'GPU')
     P.GPU=0; %debug level 
 end
 
+% create random RECON ID 
+P.reconID=[char(java.util.UUID.randomUUID)];
+
+% create temp folder to save data 
+P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
+mkdir(P.foldertemp); 
+
+
+
+
 
 

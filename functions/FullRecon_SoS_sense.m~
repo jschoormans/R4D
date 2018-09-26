@@ -46,11 +46,10 @@ switch P.sensitvitymapscalc
         MR.Parameter.Encoding.KxOversampling=1;
         MR.Parameter.Encoding.KyOversampling=1;
         
-        MR_sense = MRsense(MRref,MR); %for now use standard settings... % WRONG ORDER????
-%         MR_sense = MRsense(MRref,MR,MRsurvey); %for now use standard settings... % WRONG ORDER????
+        MR_sense = MRsense(MRref,MR,MRsurvey); %for now use standard settings... % WRONG ORDER????
         MR_sense.Smooth=1;
         MR_sense.Extrapolate=1;
-        MR_sense.Mask=1;
+        MR_sense.Mask=0;
         if P.senseLargeOutput==1; %make sense maps larger
             MR_sense.Rotate=0;
             MR_sense.MatchTargetSize=1;

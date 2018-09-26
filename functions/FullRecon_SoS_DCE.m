@@ -45,9 +45,18 @@ end
 wu=getRadWeightsGA(ku);
 clear kdatac kdata %clear memory
 
+%% Remove oversampling in z-direction
+zres=max(unique(MR.Parameter.Encoding.ZRes));    % 2017-01-23 pdh added
+% max(unique()) because MR.Parameter.Encoding.ZRes contains an array
+% instead of single value
+slices_to_keep=[1+((ny-zres)/2):zres+((ny-zres)/2)];
+slices_to_keep=floor(slices_to_keep);
+kdatau=kdatau(:,:,slices_to_keep,:,:);
+
+
 %% get first guess 
 disp('First guess')
-for selectslice=P.reconslices       % sort the data into a time-series 
+parfor selectslice=P.reconslices       % sort the data into a time-series 
     fprintf('%d - ',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
@@ -55,44 +64,73 @@ for selectslice=P.reconslices       % sort the data into a time-series
 end
 R(isnan(R))=0;
 
+%% some parameters that are needed during recon/saving
+P.DCEparams.lambda = 0.25*max(abs(R(:)));  %regularization 
+P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
+P.ku=ku; 
+P.wu=wu; 
+
+%% write big files to temporary folder
+fprintf('\nWriting temporary files:')
+
+cd(P.foldertemp)
+
+for sl=P.reconslices
+    fprintf('%i - ',sl)
+    name=['temp_data_slice_',num2str(sl),'.mat'];
+    Ksl=kdatau(:,:,sl,:,:);
+    Rsl=R(:,:,sl,:);
+    senssl=sens(:,:,sl,:);
+    save(name,'Ksl','Rsl','senssl')
+end
+fprintf('\n Finished \n')
+
+
+% save general options
+cd(P.foldertemp)
+nameP='temp_options_P.mat';
+save(nameP,'P');
+
+clear kdatau R sens;
+
 %%  L1 minimization algorithm (NLCG)
     
-P.DCEparams.lambda = 0.25*max(abs(R(:))); 
-for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
+parfor selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     
-    tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
+    % load relevant data
+    cd(P.foldertemp)
+    name=['temp_data_slice_',num2str(selectslice),'.mat'];
+    vars=load(name)
+%     nameP='temp_options_P.mat'; 
+%     P=load(nameP)
     
-    if ~P.GPU 
-        tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
-    else 
-        disp('Generate GPU NUFFT Operator');
-        osf = 2; % oversampling: 1.5 1.25
-        wg = 3; % kernel width: 5 7
-        sw = 12; % parallel sectors' width: 12 16
-        res = size(sens,1); 
-        
-        w=getRadWeightsGA(ku);
-        tempE = MDgpuNUFFT(ku,w,osf,wg,sw,[res,res,1],[],true);
-        
-        
+    
+    nc=size(vars.Ksl,4); 
+    k_weighted=squeeze(double(vars.Ksl)).*permute(repmat(sqrt(P.wu),[1 1 1 nc]),[1 2 4 3]);
+    
+    if ~P.GPU
+        NufftOP=MCNUFFT(P.ku,sqrt(P.wu),squeeze(vars.senssl));
+    else  % to do...
+        % to do...
     end
     
     
     fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
     
-    res=squeeze(R(:,:,selectslice,:));
+    res=squeeze(vars.Rsl);
     for outeriter=1:P.DCEparams.outeriter
-        res=CSL1NlCg_experimental(res,P.DCEparams,tempy,tempE,selectslice); 
+        res=CSL1NlCg_experimental(res,P.DCEparams,k_weighted,NufftOP,selectslice);
     end
     recon_cs(:,:,selectslice,:) = res;
     
-    voxelsize=MR.Parameter.Scan.AcqVoxelSize
-    description='description'
-    cd(P.resultsfolder)
-    nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,P.reconslices(1):selectslice,:),[2 1 3 4]))))),voxelsize,[],[],description);
-    save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
     
 end
+
+description='description'
+cd(P.resultsfolder)
+nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
+save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
+
 
 
 end

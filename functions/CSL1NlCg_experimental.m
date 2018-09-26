@@ -14,8 +14,8 @@ function [x,cost] = CSL1NlCg_experimental(x0,param,tempy,tempE,tempslice)
 % Based on the paper: Sparse MRI: The application of compressed sensing for rapid MR imaging. 
 % Lustig M, Donoho D, Pauly JM. Magn Reson Med. 2007 Dec;58(6):1182-95.
 %
-% Ricardo Otazo, NYU 2008
-%
+% Based on: Ricardo Otazo, NYU 2008
+
 
 %2015 J Schoormans: added L2 constraint for magnitude eror of next frames
 %2015: J SCHOORMANS MODIFIED FOR PARALLEL COMPUTING
@@ -36,12 +36,12 @@ param.y=tempy;
 param.slice=tempslice;
 
 if isfield(param,'W2') %a second preconditioner has been added 
-  disp('TGV!')
-   param.lambda=param.lambda/3; %for TGV lambda =1/2
-   param.lambda2=param.lambda*2;
+    disp('TGV!')
+    param.lambda=param.lambda/3; %for TGV lambda =1/2
+    param.lambda2=param.lambda*2;
 else
-disp('not TGV')  
-param.lambda2=0;
+    disp('not TGV')
+    param.lambda2=0;
 end
 
 if ~isfield(param,'Prec')
@@ -156,9 +156,9 @@ clf; end
     
     if param.Prec==0
     if strcmp(param.Beta,'FR')==1  
-        bk = g1(:)'*g1(:)/(g0(:)'*g0(:)+eps)
+        bk = g1(:)'*g1(:)/(g0(:)'*g0(:)+eps);
     elseif strcmp(param.Beta,'PR')==1 
-        bk = g1(:)'*(g1(:)-g0(:))/(g0(:)'*g0(:)+eps)
+        bk = g1(:)'*(g1(:)-g0(:))/(g0(:)'*g0(:)+eps);
     elseif strcmp(param.Beta,'PR_restart')
         bk = g1(:)'*(g1(:)-g0(:))/(g0(:)'*g0(:)+eps);
         bk=max(real(bk),0); %assume bk should be real??

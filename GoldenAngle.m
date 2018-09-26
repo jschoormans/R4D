@@ -59,9 +59,12 @@ disp(' \____/\___/|_|\__,_|\___|_| |_\_| |_/_| |_|\__, |_|\___|')
 disp('                                             __/ |       ')
 disp('                                            |___/        ')
 fprintf ('Golden-angle stack-of-stars reconstruction\n')
-fprintf('V1.1\n ISMRM 2017 \n')
-fprintf('J Schoormans - AMC Amsterdam - July 2016\n')
+fprintf('V1.2\n \n')
+fprintf('J Schoormans - AMC Amsterdam - Sept 2018\n')
 disp('--------------------------------------------------------------')
+fprintf('Recommended MRecon version: 3.0.506 \n')
+fprintf('Your MRecon version: '); which MRecon
+fprintf(' \n')
 tic
 
 if nargin==0
@@ -75,7 +78,7 @@ P=checkGAParams(P);
 switch P.recontype
     case '4D';  disp('4D reconstruction');
         [MR,P]=FullRecon_SoS_4D(P);
-    case 'DCE'; disp('DCE reconstruction (not yet implemented...');
+    case 'DCE'; disp('DCE reconstruction');
         if P.DCEparams.GUI==false
         [MR,P]=FullRecon_SoS_DCE(P); %run standard DCE recon with provided settings
         else %run GUI to choose spokes/settings based on signal 
@@ -89,6 +92,8 @@ end
 
 [MR,P] = SaveReconResults(MR,P); % SAVES THE TEXT FILE WITH PARAMETERS
 toc
-disp('--------------------------------------------------------------')
 
+% remove temp folder
+rmdir(P.foldertemp,'s');
+disp('--------------------------------------------------------------')
 end

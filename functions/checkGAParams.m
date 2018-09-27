@@ -26,7 +26,8 @@ if ~isfield(P,'resultsfolder')
     P.resultsfolder=[P.folder,'Results'];
 end
 if ~exist(P.resultsfolder);
-    mkdir([P.folder,'Results']); end
+    mkdir(P.resultsfolder); 
+end
 cd(P.resultsfolder)
 if ~isfield(P,'filename');
     P.filename=[regexprep(P.file,'.raw',''),'R_',datestr(now,'yy_mm_dd_HH_MM')]; %think of filename

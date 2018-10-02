@@ -128,8 +128,11 @@ classdef GoldenAngle_Recon < MRecon
             MR.K2I;
             MR.GridderNormalization;
             MR.ShowData
-        end
+        end        
+        
+        
     end
+   
     
     % These functions are Hidden to the user
     methods (Static, Hidden)

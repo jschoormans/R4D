@@ -75,6 +75,14 @@ else nargin==1;
 end
 
 P=checkGAParams(P);
+
+P.reconID=[char(java.util.UUID.randomUUID)];
+
+% create temp folder to save data 
+P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
+mkdir(P.foldertemp); 
+
+
 switch P.recontype
     case '4D';  disp('4D reconstruction');
         [MR,P]=FullRecon_SoS_4D(P);

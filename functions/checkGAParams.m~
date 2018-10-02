@@ -170,15 +170,11 @@ if ~isfield(P,'saveMR')
    P.saveMR=0;
 end
 
-if ~isfield(P,'reloadMR')
+if ~isfield(P,' reloadMR)
     %reloads the MR object and other parameters, if it exists
     P.reloadMR=1;
 end
 
-if ~isfield(P,'clearcorr')
-    %clear correction (homogeneity)
-    P.clearcorr=0;
-end
 
 
 

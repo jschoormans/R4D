@@ -16,7 +16,7 @@ clear all; close all; clc;
 
 P=struct
 if ispc()
-%     P.folder=temp;
+    P.folder='L:\basic\divi\Projects\femoral\FEM\FEM10_01\'
 else
     P.folder='/home/jschoormans/lood_storage/divi/Projects/femoral/FEM/FEM10_01/'
     %     P.folder='/home/jschoormans/lood_storage/divi/Ima/parrec/Pauldh/2018-09-04_DCE_knie_grasp/'
@@ -27,23 +27,28 @@ P.coil_survey='fe_17102016_2101366_1000_23_wipcoilsurveyscanV4.raw'
 P.sense_ref='fe_17102016_2101584_1000_26_wipsenserefscanclearV4.raw' 
 
 P.binparams.visualize =1;
-% P.spokestoread=[0:300]';
-P.reconslices=[9:20]
+% P.spokestoread=[0:250]';
+P.reconslices=[10]
 
 P.resultsfolder=[P.folder,'ResultsNew'];
+P.filename='withprewh'
 P.recontype='DCE'
 P.DCEparams.nspokes=37
 P.DCEparams.display=1;
-P.sensitvitymapscalc='sense2' % 
+P.sensitvitymapscalc='sense' % sense2 
 P.channelcompression=false;
 P.cc_nrofchans=6;
 
 P.DCEparams.Beta='FR'
 P.DCEparams.nite=8 % should be 8
-P.DCEparams.outeriter=5
+P.DCEparams.outeriter=2
 
 P.enableTGV=1
 P.GPU=0
+P.prewhiten=1
 
+P.saveMR=1
+P.loadMR=0
+P.clearcorr=1
 [MR,P]=GoldenAngle(P)
 

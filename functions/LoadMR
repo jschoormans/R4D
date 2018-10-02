@@ -1,0 +1,8 @@
+% LoadMR%reload MR object
+if P.reloadMR==1
+    if exist([P.filename,'_saveMR.mat']); %saved MR object
+        fprintf('Load MR Object\n')
+        cd(P.resultsfolder);
+        load([P.filename,'_saveMR.mat'])
+    end
+end

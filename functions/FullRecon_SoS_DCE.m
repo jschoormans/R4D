@@ -92,7 +92,7 @@ end
 R(isnan(R))=0;
 
 %% some parameters that are needed during recon/saving
-P.DCEparams.lambda = 0.25*max(abs(R(:)));  %regularization
+P.DCEparams.lambda = double(0.25*max(abs(R(:))));  %regularization
 P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
 P.ku=ku;
 P.wu=wu;
@@ -136,7 +136,7 @@ parfor selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     k_weighted=squeeze(double(vars.Ksl)).*permute(repmat(sqrt(P.wu),[1 1 1 nc]),[1 2 4 3]);
     
     if ~P.GPU
-        NufftOP=MCNUFFT(P.ku,sqrt(P.wu),squeeze(vars.senssl));
+        NufftOP=MCNUFFT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
     else  % to do...
         % to do...
     end
@@ -144,7 +144,7 @@ parfor selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     
     fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
     
-    res=squeeze(vars.Rsl);
+    res=double(squeeze(vars.Rsl));
     for outeriter=1:P.DCEparams.outeriter
         res=CSL1NlCg_experimental(res,P.DCEparams,k_weighted,NufftOP,selectslice);
     end

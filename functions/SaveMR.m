@@ -10,7 +10,7 @@ if P.saveMR==1
     if ~exist([P.filename,'_saveMRData.h5']); %saved MR object
         fprintf('\n !! Saving MR object !! \n')
 
-        Data=MR.Data; 
+        Data=single(MR.Data); 
         MR.Data=[]; clear MR.Data; 
 
 %         tic
@@ -20,7 +20,7 @@ if P.saveMR==1
         
         tic
         h5create([P.filename,'_saveMRData.h5'],'/Data',size(Data))
-        h5write([P.filename,'_saveMRData.h5'],'/Data',Data)
+        h5write([P.filename,'_saveMRData.h5'],'/Data',single(Data))
         toc
     end
 end

@@ -172,7 +172,7 @@ end
 
 if ~isfield(P,'reloadMR')
     %reloads the MR object and other parameters, if it exists
-    P.reloadMR=1;
+    P.reloadMR=0;
 end
 
 if ~isfield(P,'clearcorr')

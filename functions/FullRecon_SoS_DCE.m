@@ -83,7 +83,7 @@ kdatau=kdatau(:,:,slices_to_keep,:,:);
 
 %% get first guess
 disp('First guess')
-parfor selectslice=P.reconslices       % sort the data into a time-series
+for selectslice=P.reconslices       % sort the data into a time-series
     fprintf('%d - ',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));

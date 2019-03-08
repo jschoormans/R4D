@@ -1,3 +1,5 @@
 
 *.raw
 *.lab
+*.png
+*.dcm

@@ -1,0 +1,11 @@
+golden angle 38.977626800537109
+femoral 001
+
+
+data exported after 
+    MR.Perform1;                        %reading and sorting data
+    MR.CalculateAngles;
+    MR.PhaseShift;
+
+
+

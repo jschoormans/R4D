@@ -1,0 +1,4 @@
+cd('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp')
+
+tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+temprecon=(tempE'*tempy); %first guess

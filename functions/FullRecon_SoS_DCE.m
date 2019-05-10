@@ -50,6 +50,9 @@ if P.sensitivitymaps == true
         clear MR_sense;
     elseif strcmp(P.sensitvitymapscalc,'espirit')==1|strcmp(P.sensitvitymapscalc,'openadapt')
         run FullRecon_SoS_sense.m;
+        
+    elseif strcmp(P.sensitvitymapscalc,'ones')
+        sens=ones([P.reconresolution,nc]); 
     else
         error('unknown sensitivity calculation method!')
     end
@@ -122,7 +125,7 @@ clear kdatau R sens;
 
 %%  L1 minimization algorithm (NLCG)
 
-parfor selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
+for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     
     % load relevant data
     cd(P.foldertemp)

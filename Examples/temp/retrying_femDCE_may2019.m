@@ -43,6 +43,9 @@ P.DCEparams.nite=8 % should be 8
 P.DCEparams.outeriter=5
 
 P.enableTGV=1
-P.GPU=0
+P.GPU=1
 
 [MR,P]=GoldenAngle(P)
+
+
+

@@ -81,29 +81,24 @@ clear classes
 load('carotiddata.mat')
 
 tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,:)));
-reconCPU=(tempE'*tempy);
+reconCPU=(tempE'*tempy); %first guess
 
-tempE2=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,8,:)));
-reconGPU=(tempE2'*tempy);
+tempE2=GPUNUFFTT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,:)));
+reconGPU=(tempE2'*tempy); %first guess
 
 figure(10)
 imshow(abs(reconCPU(:,:,1)),[])
 figure(11)
 imshow(abs(reconGPU(:,:,1)),[])
 
-kspCPU=(tempE*reconCPU);
-kspGPU=(tempE2*reconGPU);
+%%
+kspCPU=(tempE*reconCPU); %first guess
+kspGPU=(tempE2*reconGPU); %first guess
 
 
-reconCPU2=(tempE'*kspCPU);
-reconGPU2=(tempE2'*kspGPU);
 
-figure(12)
-imshow(abs(reconCPU2(:,:,1)),[])
-figure(13)
-imshow(abs(reconGPU2(:,:,1)),[])
 
-whos
+
 
 
 

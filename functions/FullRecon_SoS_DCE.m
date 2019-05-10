@@ -89,7 +89,13 @@ disp('First guess')
 for selectslice=P.reconslices       % sort the data into a time-series
     fprintf('%d - ',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
-    tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    
+    if ~P.GPU
+        tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    else
+        tempE=GPUNUFFTT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    end
+    
     R(:,:,selectslice,:)=(tempE'*tempy); %first guess
 end
 R(isnan(R))=0;
@@ -141,7 +147,7 @@ for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
     if ~P.GPU
         NufftOP=MCNUFFT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
     else  % to do...
-        % to do...
+        NufftOP=GPUNUFFTT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
     end
     
     

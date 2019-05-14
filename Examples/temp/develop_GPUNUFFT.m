@@ -77,14 +77,26 @@ toc
 %%     tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,:)));
 
 % COMPARE MCNUFFT and GPUNUFFTT
+disp('run...')
+
 clear classes
 load('carotiddata.mat')
 
-tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,:)));
-reconCPU=(tempE'*tempy);
 
-tempE2=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,8,:)));
-reconGPU=(tempE2'*tempy);
+%wu=wu./max(wu(:)); 
+wu=sqrt(abs(ku));
+
+sens=bsxfun(@rdivide,sens, sqrt(sum(abs(sens).^2,4)));
+ncoils=1:8;
+ntf=1;
+
+
+tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,ncoils)));
+reconCPU=(tempE'*tempy(:,:,ncoils,ntf));
+
+tempE2=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,8,ncoils)));
+%reconGPU=(tempE2'*(tempy(:,:,ncoils,ntf).*(sqrt(wu(:,:,ntf)))));
+reconGPU=(tempE2'*(tempy(:,:,ncoils,ntf)));
 
 figure(10)
 imshow(abs(reconCPU(:,:,1)),[])
@@ -94,18 +106,108 @@ imshow(abs(reconGPU(:,:,1)),[])
 kspCPU=(tempE*reconCPU);
 kspGPU=(tempE2*reconGPU);
 
-
 reconCPU2=(tempE'*kspCPU);
-reconGPU2=(tempE2'*kspGPU);
+reconGPU2=(tempE2'*(kspGPU));
+
+kspCPU2=(tempE*reconCPU2);
+kspGPU2=(tempE2*reconGPU2);
+
+reconCPU3=(tempE'*kspCPU2);
+reconGPU3=(tempE2'*(kspGPU2));
+
 
 figure(12)
 imshow(abs(reconCPU2(:,:,1)),[])
 figure(13)
 imshow(abs(reconGPU2(:,:,1)),[])
 
-whos
+
+% forward operator
 
 
+figure(1); clf
+hold on
+%plot(abs(reconCPU(112,:,1)),'k');
+plot(abs(reconGPU(112,:,1)),'r');
+%plot(abs(reconCPU2(112,:,1)),'k--');
+plot(abs(reconGPU2(112,:,1)),'r--');
+%plot(abs(reconCPU3(112,:,1)),'k-.');
+plot(abs(reconGPU3(112,:,1)),'r-.');
+
+
+
+legend('CPU','GPU','CPU-2','GPU-2','CPU-3','GPU-3')
+hold off
+
+
+%%
+figure(1); clf
+hold on
+%plot(abs(tempy(:,1,1,ntf)./sqrt(wu(:,1,ntf))),'k');
+plot(abs(tempy(:,10,1,ntf)),'k');
+plot(abs(kspCPU(:,10,1)),'r--');
+plot(abs(kspCPU2(:,10,1)),'r-.');
+
+legend('CPU','GPU','CPU-2','GPU-2','CPU-3','GPU-3')
+hold off
+
+figure(2); clf;
+plot(abs(tempy(:,10,1,ntf))./abs(kspCPU2(:,10,1)),'k');
+
+
+
+
+%%
+% TIME 
+
+%%
+
+fprintf('\n\n\nBenchmarking...\n')
+disp('run ten times in parallel')
+tic
+parfor ii=1:10
+tempE2=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,8,ncoils)));
+kspGPU=(tempE2*reconGPU);
+reconGPU2=(tempE2'*(kspGPU));
+kspGPU2=(tempE2*reconGPU2);
+reconGPU3=(tempE2'*(kspGPU2));
+end
+toc 
+
+
+disp('run ten times in serial')
+tic
+for ii=1:10
+tempE2=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,8,ncoils)));
+kspGPU=(tempE2*reconGPU);
+reconGPU2=(tempE2'*(kspGPU));
+kspGPU2=(tempE2*reconGPU2);
+reconGPU3=(tempE2'*(kspGPU2));
+end
+toc 
+
+
+disp('run ten times in parallel (CPU)')
+tic
+parfor ii=1:10
+    tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,ncoils)));
+kspCPU=(tempE*reconCPU);
+reconCPU2=(tempE'*kspCPU);
+kspCPU2=(tempE*reconCPU2);
+reconCPU3=(tempE'*kspCPU2);
+end
+toc 
+
+disp('run ten times in serial (CPU)')
+tic
+for ii=1:10
+    tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,8,ncoils)));
+kspCPU=(tempE*reconCPU);
+reconCPU2=(tempE'*kspCPU);
+kspCPU2=(tempE*reconCPU2);
+reconCPU3=(tempE'*kspCPU2);
+end
+toc 
 
 
 

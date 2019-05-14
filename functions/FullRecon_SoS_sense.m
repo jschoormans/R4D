@@ -131,6 +131,8 @@ switch P.sensitvitymapscalc
         
         fprintf('Running openadapt...\n')
         [~, ~, sens] = openadapt(zerofill);
+        
+        sens=bsxfun(@rdivide,sens, sqrt(sum((sens.^2),4)));
         fprintf('Finished.\n')
         
         

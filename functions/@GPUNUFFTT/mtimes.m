@@ -6,7 +6,9 @@ function ress = mtimes(a,bb)
      for tt=1:size(bb,4)
          b = bb(:,:,:,tt);%.*sqrt(a.w(:,:,tt));
          b=reshape(b,[size(b,1)*size(b,2),size(b,3)]);
-         ress(:,:,tt) = reshape((a.gNUFFT{tt}'*b)/sqrt(prod(a.imSize)),a.imSize(1),a.imSize(2));
+         ress(:,:,tt) = reshape((a.gNUFFT{tt}'*b),a.imSize(1),a.imSize(2));
+         %ress(:,:,tt) = reshape((a.gNUFFT{tt}'*b)/sqrt(prod(a.imSize)),a.imSize(1),a.imSize(2));
+         
      end
      
      
@@ -25,9 +27,8 @@ function ress = mtimes(a,bb)
      for tt=1:size(bb,3)
         
         res=bb(:,:,tt);
-        ress(:,:,:,tt) = reshape((a.gNUFFT{tt}*res)/sqrt(prod(a.imSize)),[a.dataSize(1),a.dataSize(2),a.ncoils]); %.*a.w(:,:,tt);
-
-%       ress(:,:,ch,tt) = reshape(nufft(res,a.st{tt})/sqrt(prod(a.imSize)),a.dataSize(1),a.dataSize(2)).*a.w(:,:,tt);
+        %ress(:,:,:,tt) = reshape((a.gNUFFT{tt}*res)/sqrt(prod(a.imSize)),[a.dataSize(1),a.dataSize(2),a.ncoils]); %.*a.w(:,:,tt);
+        ress(:,:,:,tt) = reshape((a.gNUFFT{tt}*res),[a.dataSize(1),a.dataSize(2),a.ncoils]); %.*a.w(:,:,tt);
 
      end
  end

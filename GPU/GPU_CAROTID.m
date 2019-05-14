@@ -1,23 +1,67 @@
-function [MR,P]=FullRecon_SoS_DCE(P)
-% DCE GOLDEN ANGLE RECONSTRUCTION
+% GPU RECON CAROTID
+% because the GoldenAngle has gotten too big/complicated, I only copy/paste
+% the relevant code here
+
+clear all
+P=struct()
+P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
+P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
+P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp'
+% 
+
+% P.spokestoread=[0:300]';
+P.reconslices=[9:11]
+
+P.resultsfolder=[P.folder,'Results'];
+P.recontype='DCE'
+P.DCEparams.nspokes=37
+P.DCEparams.display=1;
+P.sensitvitymapscalc='openadapt' % 
+P.channelcompression=false;
+P.cc_nrofchans=6;
+P.filename='recon_GPU_dev'
+
+P.DCEparams.Beta='FR'
+P.DCEparams.nite=8 % should be 8
+P.DCEparams.outeriter=5
+P.DCEparams.display=0
+
+P.enableTGV=1
+P.GPU=1
+P.prewhiten=1
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%create temp folder
+P.reconID=[char(java.util.UUID.randomUUID)];
+% create temp folder to save data 
+P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
+mkdir(P.foldertemp); 
+
+%%
+tic 
+fprintf('\nCarotid DCE Reconstruction...\n\n')
+
 P=checkGAParams(P);
 
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 [MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
-run LoadMR.m %loads previous MR file if it exists
 
-if P.isLoaded==0    
-    MR.Perform1;                        %reading and sorting data
-    MR.CalculateAngles;
-    MR.PhaseShift;
-    MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
-end
-
-run SaveMR
+MR.Perform1;                        %reading and sorting data
+MR.CalculateAngles;
+MR.PhaseShift;
+MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
+fprintf('\nloading data...');toc
 %%
+tic 
 [nx,ntviews,ny,nc]=size(MR.Data);
 k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
+fprintf('building trajectory...');toc
+
+
 %%
+tic
 if P.prewhiten
     fprintf('Prewhitening...')
     
@@ -40,33 +84,41 @@ if P.prewhiten
     MR.Data=reshape(data_corr,sizeMRDATA);
     fprintf('Finished\n')
 end
-%%
-if P.sensitivitymaps == true
-    if strcmp(P.sensitvitymapscalc,'sense')==1|strcmp(P.sensitvitymapscalc,'sense2')==1
-        P.senseLargeOutput=1;
-        OutputSizeSensitivity=P.reconresolution; %what if data is not same length as this resolution??
-        run FullRecon_SoS_sense.m;
-        %             sens=MR_sense.Sensitivity; %??
-        clear MR_sense;
-    elseif strcmp(P.sensitvitymapscalc,'espirit')==1|strcmp(P.sensitvitymapscalc,'openadapt')
-        run FullRecon_SoS_sense.m;
-        
-    elseif strcmp(P.sensitvitymapscalc,'ones')
-        sens=ones([P.reconresolution,nc]); 
-    else
-        error('unknown sensitivity calculation method!')
-    end
-else
-    error('sense maps needed for DCE recons!')
-end
+fprintf('\nprewhiten...');toc
+%% openadapt sense maps 
+tic
+res=MR.Parameter.Encoding.XReconRes;
 
+
+kdata=squeeze(MR.Data); %select kdata for slice
+w=getRadWeightsGA(k);
+weighted_data=bsxfun(@times,kdata,sqrt(w));
+NUFFTOP=NUFFT(k,sqrt(w),1,0,[res res],2);
+
+fprintf('calculating separate coil/slice images for openadapt...\n')
+tic
+for selectslice=P.reconslices       % sort the data into a time-series
+    fprintf('%d - ',selectslice)
+    for selectcoil=[1:size(kdata,4)]
+        zerofill(:,:,selectslice,selectcoil)=NUFFTOP'*double(kdata(:,:,selectslice,selectcoil));
+    end
+end
+toc
+
+fprintf('Running openadapt...\n')
+[~, ~, sens] = openadapt(zerofill);
+
+sens=bsxfun(@rdivide,sens, sqrt(sum((sens.^2),4)));
+fprintf('Finished.\n')
+
+fprintf('\nopenadapt sense maps...');toc
+%% sorting into timeframes; Remove oversampling in z-direction
+tic
 %%%SORTING
 kdata=squeeze(MR.Data(:,:,:,:,1)); %select kdata for slice
 nt=floor(ntviews/P.DCEparams.nspokes);              % calculate (max) number of frames
 kdatac=kdata(:,1:nt*P.DCEparams.nspokes,:,:);       % crop the data according to the number of spokes per frame
 
-
-%%
 for ii=1:nt       % sort the data into a time-series
     kdatau(:,:,:,:,ii)=kdatac(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes,:,:); %kdatau now (nfe nspoke nslice nc nt)
     ku(:,:,ii)=double(k(:,(ii-1)*P.DCEparams.nspokes+1:ii*P.DCEparams.nspokes));
@@ -74,31 +126,29 @@ end
 
 wu=getRadWeightsGA(ku);
 clear kdatac kdata %clear memory
+toc
 
-%% Remove oversampling in z-direction
 zres=max(unique(MR.Parameter.Encoding.ZRes));    % 2017-01-23 pdh added
-% max(unique()) because MR.Parameter.Encoding.ZRes contains an array
-% instead of single value
 slices_to_keep=[1+((ny-zres)/2):zres+((ny-zres)/2)];
 slices_to_keep=floor(slices_to_keep);
 kdatau=kdatau(:,:,slices_to_keep,:,:);
 
-
+fprintf('\nsorting into timeframes...');toc
 %% get first guess
+
+tic
 disp('First guess')
 for selectslice=P.reconslices       % sort the data into a time-series
     fprintf('%d - ',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     
-    if ~P.GPU
-        tempE=MCNUFFT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
-    else
-        tempE=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
-    end
-    
-    R(:,:,selectslice,:)=(tempE'*tempy); %first guess
+    NUFFTOP=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    R(:,:,selectslice,:)=(NUFFTOP'*tempy); %first guess
 end
 R(isnan(R))=0;
+fprintf('\nFirst Guess...');toc
+
+
 
 %% some parameters that are needed during recon/saving
 P.DCEparams.lambda = double(0.25*max(abs(R(:))));  %regularization
@@ -127,39 +177,27 @@ cd(P.foldertemp)
 nameP='temp_options_P.mat';
 save(nameP,'P');
 
-clear kdatau R sens;
+%clear kdatau R sens;
 
 %%  L1 minimization algorithm (NLCG)
 
-for selectslice=P.reconslices;     %to do: CHANGE TO RELEVANT SLICES OMNLY
-    
+for selectslice=P.reconslices;
+    fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
+
     % load relevant data
     cd(P.foldertemp)
     name=['temp_data_slice_',num2str(selectslice),'.mat'];
-    vars=load(name)
-    %     nameP='temp_options_P.mat';
-    %     P=load(nameP)
+    vars=load(name);
     
     
-    nc=size(vars.Ksl,4);
+    NufftOP=GPUNUFFTT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
+    
     k_weighted=squeeze(double(vars.Ksl)).*permute(repmat(sqrt(P.wu),[1 1 1 nc]),[1 2 4 3]);
-    
-    if ~P.GPU
-        NufftOP=MCNUFFT(P.ku,P.wu,double(squeeze(vars.senssl)));
-    else  % to do...
-        NufftOP=GPUNUFFTT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
-    end
-    
-    
-    fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
-    
-    res=double(squeeze(vars.Rsl));
+    res=(single(squeeze(vars.Rsl)));
     for outeriter=1:P.DCEparams.outeriter
-        res=CSL1NlCg_experimental(res,P.DCEparams,k_weighted,NufftOP,selectslice);
+        res=CSL1NlCg_GPU(res,P.DCEparams,k_weighted,NufftOP,selectslice);
     end
-    recon_cs(:,:,selectslice,:) = res;
-    
-    
+    recon_cs(:,:,selectslice,:) = gather(res); 
 end
 
 %% CLEAR CORR
@@ -170,7 +208,7 @@ reconCLEAR1=bsxfun(@times,recon_cs(:,:,10,:),clearmap);
 size(reconCLEAR1)
 imshow(abs(reconCLEAR1(:,:,1,1)),[])
 end
-%%
+%% save as nifiti...
 
 description='description'
 cd(P.resultsfolder)
@@ -178,5 +216,20 @@ nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,:,:),[2 1 3 4]))))),P.voxels
 save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 
+%% remove temp folder
+%rmdir(P.foldertemp,'s');
 
-end
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -242,8 +242,6 @@ end
 
 res=L2Obj+param.lambda*L1Obj+param.lambda2*L1Obj2;
 
-
-
 function g = grad(x,param)%***********************************************
 
 % L2-norm part
@@ -277,7 +275,6 @@ sum(gg1(:)>0)/(sum(gg1(:)<0)+sum(gg1(:)>0))
 figure(99); imshow(gg1(:,:,5),[-5 5])
 
 Mi=1./(gg1+eps); %PRECONDITIONER (inverse of diagonals of Hessian)
-
  
 function g = grad2(x,param)%***********************************************
 

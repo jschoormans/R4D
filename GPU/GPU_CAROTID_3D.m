@@ -3,6 +3,7 @@
 % the relevant code here
 addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
 addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
+addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
 
 clear all
 
@@ -15,7 +16,7 @@ P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705
 P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
 
 
-P.spokestoread=[0:300]';
+%P.spokestoread=[0:300]';
 P.recontype='DCE'
 P.DCEparams.nspokes=37
 P.DCEparams.display=1;

@@ -41,6 +41,11 @@ if ~isfield(P,'recontype'); %if nothing specified, do normal 3D recon
 P.recontype='3D'; 
 end
 
+if ~isfield(P,'zerofill'); %if nothing specified, do normal 3D recon
+P.zerofill=1; 
+end
+
+
 if strcmp(P.recontype,'3D')
    if ~isfield(P,'type3D')
       P.type3D=1; 
@@ -148,6 +153,11 @@ if strcmp(P.recontype,'DCE')
     if ~isfield(P.DCEparams,'GUI')
         P.DCEparams.GUI=false;
     end
+    
+    if ~isfield(P.DCEparams,'lambdafactor')
+        P.DCEparams.lambdafactor=0.25;
+    end
+
     
 end
 

@@ -1,52 +1,58 @@
 % GPU RECON CAROTID
 % because the GoldenAngle has gotten too big/complicated, I only copy/paste
 % the relevant code here
+addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
+addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
+addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
+addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab_Collection/imagine'))
+
+%%
 
 clear all
 P=struct()
-P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
-P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
-P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp'
-% 
+% P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
+% P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
+
+%P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
+%P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
+
+P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160615_Carotid/';
+P.file='20_15062016_1913278_8_2_wip3dimsdegoldenanglesenseV4.raw';
 
 % P.spokestoread=[0:300]';
-P.reconslices=[9:11]
+P.reconslices=[1:12];
 
-P.resultsfolder=[P.folder,'Results'];
 P.recontype='DCE'
 P.DCEparams.nspokes=37
 P.DCEparams.display=1;
 P.sensitvitymapscalc='openadapt' % 
 P.channelcompression=false;
 P.cc_nrofchans=6;
-P.filename='recon_GPU_dev'
 
-P.DCEparams.Beta='FR'
-P.DCEparams.nite=8 % should be 8
-P.DCEparams.outeriter=5
-P.DCEparams.display=0
+P.DCEparams.Beta='FR';
+P.DCEparams.nite=8; % should be 8
+P.DCEparams.outeriter=10;
+P.DCEparams.display=0;
 
-P.enableTGV=1
-P.GPU=1
-P.prewhiten=1
+P.enableTGV=1;
+P.GPU=1;
+P.clearcorr=1;
+P.DCEparams.lambdafactor=0.05;
+P.zerofill=1;
 
+%%
+tic 
+fprintf('\nCarotid DCE Reconstruction...\n\n')
+P=checkGAParams(P);
 
+MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
+[MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %create temp folder
 P.reconID=[char(java.util.UUID.randomUUID)];
 % create temp folder to save data 
 P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
 mkdir(P.foldertemp); 
-
-%%
-tic 
-fprintf('\nCarotid DCE Reconstruction...\n\n')
-
-P=checkGAParams(P);
-
-MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
-[MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
 
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
@@ -59,36 +65,25 @@ tic
 k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
 fprintf('building trajectory...');toc
 
-
 %%
 tic
-if P.prewhiten
-    fprintf('Prewhitening...')
-    
-    MRn=MR.Copy; MRn.Parameter.Parameter2Read.typ=5;
-    MRn.Parameter.Parameter2Read.echo=0;
-    MRn.ReadData;
-    P.eta=MRn.Data;
-    
-    sizeMRDATA=size(MR.Data);
-    Ncoils=size(MR.Data,4);
-    Nsamples=numel(MR.Data)/Ncoils;
-    data=reshape(MR.Data,[Nsamples,Ncoils]);
-    data=data.';
-    
-    psi = (1/(Nsamples-1))*(P.eta' * P.eta);
-    L = chol(psi,'lower');
-    L_inv = inv(L);
-    data_corr = conj(L_inv) * data;
-    data_corr=data_corr.';
-    MR.Data=reshape(data_corr,sizeMRDATA);
-    fprintf('Finished\n')
-end
-fprintf('\nprewhiten...');toc
+MRn=MR.Copy; MRn.Parameter.Parameter2Read.typ=5;
+MRn.Parameter.Parameter2Read.echo=0;
+MRn.ReadData;
+P.eta=MRn.Data;
+
+sizeMRDATA=size(MR.Data);
+Ncoils=size(MR.Data,4);
+Nsamples=numel(MR.Data)/Ncoils;
+data=reshape(MR.Data,[Nsamples,Ncoils]);
+data=data.';
+
+psi = (1/(Nsamples-1))*(P.eta' * P.eta);
+
+fprintf('\ncalculate noise correlation matrix...');toc
 %% openadapt sense maps 
 tic
 res=MR.Parameter.Encoding.XReconRes;
-
 
 kdata=squeeze(MR.Data); %select kdata for slice
 w=getRadWeightsGA(k);
@@ -105,11 +100,9 @@ for selectslice=P.reconslices       % sort the data into a time-series
 end
 toc
 
-fprintf('Running openadapt...\n')
-[~, ~, sens] = openadapt(zerofill);
-
-sens=bsxfun(@rdivide,sens, sqrt(sum((sens.^2),4)));
-fprintf('Finished.\n')
+zerofill=permute(zerofill,[4 1 2 3]); 
+[~, ~, sens] = openadapt(zerofill,1,psi); % not sure about psi though
+sens=permute(sens,[2 3 4 1]);
 
 fprintf('\nopenadapt sense maps...');toc
 %% sorting into timeframes; Remove oversampling in z-direction
@@ -151,7 +144,11 @@ fprintf('\nFirst Guess...');toc
 
 
 %% some parameters that are needed during recon/saving
-P.DCEparams.lambda = double(0.25*max(abs(R(:))));  %regularization
+
+
+P.DCEparams.lambda = double(P.DCEparams.lambdafactor*max(abs(R(:))));  %regularization
+
+
 P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
 P.ku=ku;
 P.wu=wu;
@@ -202,22 +199,30 @@ end
 
 %% CLEAR CORR
 if P.clearcorr
-temp=1
-clearmap=sum(abs(senssl),4).^1;
-reconCLEAR1=bsxfun(@times,recon_cs(:,:,10,:),clearmap);
-size(reconCLEAR1)
-imshow(abs(reconCLEAR1(:,:,1,1)),[])
+    fprintf('clear correction...\n')
+    clearmap=sum(abs(sens),4).^1;
+    recon_cs=bsxfun(@times,recon_cs,clearmap);
 end
+
+%% ZEROFILL 
+if P.zerofill 
+   ss=size(recon_cs);
+   ksptemp=bart('fft 7', recon_cs);
+   ksptemp=padarray(ksptemp,round([ss(1)/2, ss(2)/2, ss(3)/2, 0]));
+   recon_cs=bart('fft -i 7',ksptemp); 
+   P.voxelsize=P.voxelsize/2; 
+end
+
 %% save as nifiti...
 
-description='description'
+description='GRASP';
 cd(P.resultsfolder)
 nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
 save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 
 %% remove temp folder
-%rmdir(P.foldertemp,'s');
+rmdir(P.foldertemp,'s');
 
 
 

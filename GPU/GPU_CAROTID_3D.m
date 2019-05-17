@@ -32,8 +32,6 @@ P.DCEparams.display=0
 
 P.enableTGV=1
 P.GPU=1
-P.prewhiten=1
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,35 +64,25 @@ fprintf('building trajectory...');toc
 
 %%
 tic
-if P.prewhiten
-    fprintf('Prewhitening...')
-    
-    MRn=MR.Copy; MRn.Parameter.Parameter2Read.typ=5;
-    MRn.Parameter.Parameter2Read.echo=0;
-    MRn.ReadData;
-    P.eta=MRn.Data;
-    
-    sizeMRDATA=size(MR.Data);
-    Ncoils=size(MR.Data,4);
-    Nsamples=numel(MR.Data)/Ncoils;
-    data=reshape(MR.Data,[Nsamples,Ncoils]);
-    data=data.';
-    
-    psi = (1/(Nsamples-1))*(P.eta' * P.eta);
-    L = chol(psi,'lower');
-    L_inv = inv(L);
-    data_corr = conj(L_inv) * data;
-    data_corr=data_corr.';
-    MR.Data=reshape(data_corr,sizeMRDATA);
-    fprintf('Finished\n')
-end
-fprintf('\nprewhiten...');toc
+MRn=MR.Copy; MRn.Parameter.Parameter2Read.typ=5;
+MRn.Parameter.Parameter2Read.echo=0;
+MRn.ReadData;
+P.eta=MRn.Data;
+
+sizeMRDATA=size(MR.Data);
+Ncoils=size(MR.Data,4);
+Nsamples=numel(MR.Data)/Ncoils;
+data=reshape(MR.Data,[Nsamples,Ncoils]);
+data=data.';
+
+psi = (1/(Nsamples-1))*(P.eta' * P.eta);
+
+fprintf('\ncalculate noise correlation matrix...');toc
 %% openadapt sense maps 
 tic
 res=MR.Parameter.Encoding.XReconRes;
 
-
-kdata=squeeze(MR.Data); %select kdata for slice
+kdata=squeeze(ifft(MR.Data,[],3)); %select kdata for slice
 w=getRadWeightsGA(k);
 weighted_data=bsxfun(@times,kdata,sqrt(w));
 NUFFTOP=NUFFT(k,sqrt(w),1,0,[res res],2);
@@ -109,11 +97,9 @@ for selectslice=P.reconslices       % sort the data into a time-series
 end
 toc
 
-fprintf('Running openadapt...\n')
-[~, ~, sens] = openadapt(zerofill);
-
-sens=bsxfun(@rdivide,sens, sqrt(sum((sens.^2),4)));
-fprintf('Finished.\n')
+zerofill=permute(zerofill,[4 1 2 3]); 
+[~, ~, sens] = openadapt(zerofill,1,psi); % not sure about psi though
+sens=permute(sens,[2 3 4 1]);
 
 fprintf('\nopenadapt sense maps...');toc
 %% sorting into timeframes; Remove oversampling in z-direction
@@ -140,6 +126,8 @@ toc
 fprintf('\nsorting into timeframes...');toc
 %% get first guess
 
+
+kdatau2d=ifft(kdatau,[],3); 
 tic
 disp('First guess')
 for selectslice=P.reconslices       % sort the data into a time-series
@@ -152,8 +140,68 @@ end
 R(isnan(R))=0;
 fprintf('\nFirst Guess...');toc
 
+%% FIrst Guess - 3D operator case
 
 
+
+clear w_all_t k_all_t
+
+
+% THIS PART IS MAKING THE 3D stack-of-stars should be put somewhere else...
+for ii=1:nt
+
+kGPU=zeros([2,numel(ku(:,:,ii))]);
+kGPU(1,:)=real(col(ku(:,:,ii)));
+kGPU(2,:)=imag(col(ku(:,:,ii)));
+kGPU(3,:)=0; 
+kGPU=single(kGPU);
+
+k_all=repmat(kGPU,[1 1 60]);
+k_all=reshape(k_all,3,[]);
+
+k_all_z=[-30:29]/60;
+k_all_z=repmat(k_all_z,[numel(ku(:,:,ii)) 1]);
+k_all_z=k_all_z(:); 
+k_all(3,:)=k_all_z;
+
+k_all_t(:,:,ii)=k_all;
+
+wGPU=col(wu(:,:,ii));
+w_all=repmat(wGPU,[1 1 60]);
+w_all_t(:,ii)=w_all(:);
+end
+
+size(k_all_t)
+size(w_all_t)
+
+
+NUFFTOP=GPUNUFFTT3D(k_all_t,sqrt(w_all_t),sens);
+
+y=kdatau;
+cc=create_checkerboard(size(kdatau,3));
+y=bsxfun(@times,y,permute(cc,[1 3 2])); 
+
+y=reshape(y,[],nc,nt);  % THIS SHOULD BE MOVED TO THE OPERATOR
+size(y)
+
+y=bsxfun(@times,y,sqrt(permute(w_all_t,[1 3 2]))); 
+
+
+tic
+R2=(NUFFTOP'*y); %first guess
+disp('3D NUFFT TIME:'),toc
+
+imagine(R,'Name','2d',R2,'Name','3D')
+
+%% back to kspace
+
+test=NUFFTOP*R2;
+size(test)
+
+%%
+
+
+%{
 %% some parameters that are needed during recon/saving
 P.DCEparams.lambda = double(0.25*max(abs(R(:))));  %regularization
 P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
@@ -219,6 +267,7 @@ cd(P.resultsfolder)
 nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
 save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
+[MR,P] = SaveReconResults(MR,P); % SAVES THE TEXT FILE WITH PARAMETERS
 
 %% remove temp folder
 %rmdir(P.foldertemp,'s');
@@ -231,6 +280,7 @@ save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 
 
+%}
 
 
 

@@ -4,69 +4,63 @@
 addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
 addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
 addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab_Collection/imagine'))
-
-%%
 
 clear all
+
 P=struct()
 P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
 P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
+P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp'
+% 
+P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
+P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
 
-%P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
-%P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
 
-%P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160615_Carotid/';
-% %P.file='20_15062016_1913278_8_2_wip3dimsdegoldenanglesenseV4.raw';
-% P.folder='/home/jschoormans/lood_storage/divi/Ima/parrec/jschoormans/carotid_DCE/2019_05_15/'
-% P.file='ca_15052019_1527087_4_2_carotid_dce_shortV4.raw'
-% P.file='ca_15052019_1535002_6_2_cdce-transvV4.raw'
-
-% P.spokestoread=[0:300]';
-% P.reconslices=[10];
-
+%P.spokestoread=[0:300]';
 P.recontype='DCE'
 P.DCEparams.nspokes=37
 P.DCEparams.display=1;
 P.sensitvitymapscalc='openadapt' % 
 P.channelcompression=false;
-P.cc_nrofchans=6;
+P.cc_nrofchans=3;
+P.filename='recon_GPU_dev'
 
-P.DCEparams.Beta='FR';
-P.DCEparams.nite=8; % should be 8
-P.DCEparams.outeriter=10;
-P.DCEparams.display=0;
+P.DCEparams.Beta='FR'
+P.DCEparams.nite=8 % should be 8
+P.DCEparams.outeriter=5
+P.DCEparams.display=0
 
-P.enableTGV=1;
-P.GPU=1;
-P.clearcorr=1;
-P.DCEparams.lambdafactor=0.5;
-P.zerofill=1;
+P.enableTGV=1
+P.GPU=1
 
-%%
-tic 
-fprintf('\nCarotid DCE Reconstruction...\n\n')
-P=checkGAParams(P);
 
-MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
-[MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %create temp folder
 P.reconID=[char(java.util.UUID.randomUUID)];
 % create temp folder to save data 
 P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
 mkdir(P.foldertemp); 
 
+%%
+tic 
+fprintf('\nCarotid DCE Reconstruction...\n\n')
+
+P=checkGAParams(P);
+
+MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
+[MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
+
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
 MR.PhaseShift;
-MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
+%MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
 fprintf('\nloading data...');toc
 %%
 tic 
 [nx,ntviews,ny,nc]=size(MR.Data);
 k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
 fprintf('building trajectory...');toc
+
 
 %%
 tic
@@ -88,7 +82,7 @@ fprintf('\ncalculate noise correlation matrix...');toc
 tic
 res=MR.Parameter.Encoding.XReconRes;
 
-kdata=squeeze(MR.Data); %select kdata for slice
+kdata=squeeze(ifft(MR.Data,[],3)); %select kdata for slice
 w=getRadWeightsGA(k);
 weighted_data=bsxfun(@times,kdata,sqrt(w));
 NUFFTOP=NUFFT(k,sqrt(w),1,0,[res res],2);
@@ -124,10 +118,10 @@ wu=getRadWeightsGA(ku);
 clear kdatac kdata %clear memory
 toc
 
-zres=max(unique(MR.Parameter.Encoding.ZRes));    % 2017-01-23 pdh added
-slices_to_keep=[1+((ny-zres)/2):zres+((ny-zres)/2)];
-slices_to_keep=floor(slices_to_keep);
-kdatau=kdatau(:,:,slices_to_keep,:,:);
+% zres=max(unique(MR.Parameter.Encoding.ZRes));    % 2017-01-23 pdh added
+% slices_to_keep=[1+((ny-zres)/2):zres+((ny-zres)/2)];
+% slices_to_keep=floor(slices_to_keep);
+% kdatau=kdatau(:,:,slices_to_keep,:,:);
 
 fprintf('\nsorting into timeframes...');toc
 %% get first guess
@@ -144,14 +138,61 @@ end
 R(isnan(R))=0;
 fprintf('\nFirst Guess...');toc
 
+%% FIrst Guess - 3D operator case
 
 
+
+clear w_all_t k_all_t
+for ii=1:nt
+
+kGPU=zeros([2,numel(ku(:,:,ii))]);
+kGPU(1,:)=real(col(ku(:,:,ii)));
+kGPU(2,:)=imag(col(ku(:,:,ii)));
+kGPU(3,:)=0; 
+kGPU=single(kGPU);
+
+k_all=repmat(kGPU,[1 1 60]);
+k_all=reshape(k_all,3,[]);
+
+k_all_z=[-30:29]/60;
+k_all_z=repmat(k_all_z,[numel(ku(:,:,ii)) 1]);
+k_all_z=k_all_z(:); 
+k_all(3,:)=k_all_z;
+
+k_all_t(:,:,ii)=k_all;
+
+wGPU=col(wu(:,:,ii));
+w_all=repmat(wGPU,[1 1 60]);
+w_all_t(:,ii)=w_all(:);
+end
+
+size(k_all_t)
+size(w_all_t)
+
+
+NUFFTOP=GPUNUFFTT3D(k_all_t,sqrt(w_all_t),sens);
+
+y=kdatau;
+cc=create_checkerboard(size(kdatau,3));
+
+y=reshape(y,[],nc,nt);
+size(y)
+
+y=bsxfun(@times,y,sqrt(permute(w_all_t,[1 3 2]))); 
+
+
+tic
+R2=(NUFFTOP'*y); %first guess
+disp('3D NUFFT TIME:'),toc
+
+
+
+%%
+
+
+%{
 %% some parameters that are needed during recon/saving
-
-
-P.DCEparams.lambda = double(P.DCEparams.lambdafactor*max(abs(R(:))));  %regularization
-
-
+P.DCEparams.lambda = double(0.25*max(abs(R(:))));  %regularization
 P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
 P.ku=ku;
 P.wu=wu;
@@ -202,39 +243,23 @@ end
 
 %% CLEAR CORR
 if P.clearcorr
-    fprintf('clear correction...\n')
-    clearmap=sum(abs(sens),4).^1;
-    recon_cs=bsxfun(@times,recon_cs,clearmap);
+temp=1
+clearmap=sum(abs(senssl),4).^1;
+reconCLEAR1=bsxfun(@times,recon_cs(:,:,10,:),clearmap);
+size(reconCLEAR1)
+imshow(abs(reconCLEAR1(:,:,1,1)),[])
 end
-
-%% ZEROFILL 
-if P.zerofill
-    for tt=1:size(recon_cs,4)
-        recon_cs_interp(:,:,:,tt) = imresize3(recon_cs(:,:,:,tt),2);
-    end
-    P.voxelsize=P.voxelsize/2;
-    
-    description='GRASP';
-    cd(P.resultsfolder)
-    nii=make_nii(squeeze(abs(flip((permute(recon_cs_interp(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
-    save_nii(nii,strcat(P.filename,'interp','.nii'))
-    
-end
-
 %% save as nifiti...
 
-description='GRASP';
+description='description'
 cd(P.resultsfolder)
 nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
-save_nii(nii,strcat(P.filename,'CS','.nii'))
-
-fprintf('Finished\n')
-
+save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 [MR,P] = SaveReconResults(MR,P); % SAVES THE TEXT FILE WITH PARAMETERS
 
 %% remove temp folder
-rmdir(P.foldertemp,'s');
+%rmdir(P.foldertemp,'s');
 
 
 
@@ -244,6 +269,7 @@ rmdir(P.foldertemp,'s');
 
 
 
+%}
 
 
 

@@ -1,5 +1,7 @@
 % draft code for parallelizing GPU
 cd('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/GPU')
+addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/functions'))
+
 %load('femoral3DData.mat')
 %% get first guess
 tic
@@ -30,12 +32,11 @@ nt=size(ku,3)
 nslices=size(kdatau,3)
 ImageDim=[size(sens,1),size(sens,2),size(sens,3)]
 
-kdatau
 
 
 for tt=1%:nt
 %     y=single(bsxfun(@times,kdatau(:,:,:,:,tt),sqrt(wu(:,:,tt)))); size(y)
-    y=kdatau2(:,:,:,:,tt).*repmat(sqrt(wu(:,:,tt)),[1 1 nslices 8]);
+    y=kdatau(:,:,:,:,tt).*repmat(sqrt(wu(:,:,tt)),[1 1 nslices 8]);
     y=reshape(y,[],size(y,4)); size(y)
     k_all=ku(:,:,tt); size(k_all)
     k_all=repmat(k_all(:),[1 nslices]); size(k_all)
@@ -44,7 +45,7 @@ for tt=1%:nt
     k(1,:)=real(col(k_all));
     k(2,:)=imag(col(k_all));
     
-    nz0=[MR.Parameter.Encoding.KzRange(1):MR.Parameter.Encoding.KzRange(2)]/abs(MR.Parameter.Encoding.KzRange(1)*2);
+    nz0=[-25:24]/abs(-25*2);
     nz0=nz0.'*ones([1,numel(wu(:,:,tt))]);
     k(3,:)=nz0(:);
 
@@ -61,13 +62,14 @@ R2(isnan(R2))=0;
 fprintf('\nFirst Guess...');toc
 
 %%
-sl=25
+sl=30
 figure(1); 
-imshow(abs(R(:,:,sl,1)),[0 2e1])
-
+imshow(abs(R(:,:,sl,1)),[])
+title('2D on GPU')
 %
 figure(2); 
 imshow(abs(R2(:,:,sl,1)),[])
+title('3D on GPU')
 
 %%
 co=[1:size(k,2)];
@@ -78,6 +80,6 @@ plot3(k(1,co),k(2,co),k(3,co))
 NUFFTOP=GPUNUFFTT3D(k,w_all(:),osf,wg,sw,ImageDim,sens,true);
 %%
 figure(4)
-plot3(k(1,:),k(2,:),w_all(:))
+plot3(k(1,:),k(2,:),w_all(:),'.')
 
 

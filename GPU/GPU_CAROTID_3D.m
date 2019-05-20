@@ -12,8 +12,8 @@ P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803
 P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
 P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp'
 % 
-P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
-P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
+% P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
+% P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
 
 
 %P.spokestoread=[0:300]';
@@ -100,6 +100,9 @@ toc
 zerofill=permute(zerofill,[4 1 2 3]); 
 [~, ~, sens] = openadapt(zerofill,1,psi); % not sure about psi though
 sens=permute(sens,[2 3 4 1]);
+img_sens_sos = sqrt(sum(abs(sens).^2,4));
+sens = sens./repmat(img_sens_sos,[1,1,1,8]);
+
 
 fprintf('\nopenadapt sense maps...');toc
 %% sorting into timeframes; Remove oversampling in z-direction
@@ -134,7 +137,7 @@ for selectslice=P.reconslices       % sort the data into a time-series
     fprintf('%d - ',selectslice)
     tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
     
-    NUFFTOP=GPUNUFFTT(ku(:,:,:),(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
+    NUFFTOP=GPUNUFFTT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
     R(:,:,selectslice,:)=(NUFFTOP'*tempy); %first guess
 end
 R(isnan(R))=0;
@@ -193,24 +196,19 @@ disp('3D NUFFT TIME:'),toc
 
 imagine(R,'Name','2d',R2,'Name','3D')
 
-%% back to kspace
-
-test=NUFFTOP*R2;
-size(test)
 
 %%
 
 
-%{
+
 %% some parameters that are needed during recon/saving
-P.DCEparams.lambda = double(0.25*max(abs(R(:))));  %regularization
+
+P.DCEparams.lambda = double(P.DCEparams.lambdafactor*max(abs(R2(:))));  %regularization
 P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
-P.ku=ku;
-P.wu=wu;
 
 %% write big files to temporary folder
+%{
 fprintf('\nWriting temporary files:')
-
 cd(P.foldertemp)
 
 for sl=P.reconslices
@@ -230,28 +228,51 @@ nameP='temp_options_P.mat';
 save(nameP,'P');
 
 %clear kdatau R sens;
-
+%}
 %%  L1 minimization algorithm (NLCG)
 
-for selectslice=P.reconslices;
-    fprintf('\n GRASP reconstruction slice: %i of %i \n',selectslice,P.reconslices(end))
+fprintf('\n GRASP reconstruction (3D on GPU) \n')
+% 
+%     % load relevant data
+%     cd(P.foldertemp)
+%     name=['temp_data_slice_',num2str(selectslice),'.mat'];
+%     vars=load(name);
+    
+    
+%     NufftOP=GPUNUFFTT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
+    
 
-    % load relevant data
-    cd(P.foldertemp)
-    name=['temp_data_slice_',num2str(selectslice),'.mat'];
-    vars=load(name);
-    
-    
-    NufftOP=GPUNUFFTT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
-    
-    k_weighted=squeeze(double(vars.Ksl)).*permute(repmat(sqrt(P.wu),[1 1 1 nc]),[1 2 4 3]);
-    res=(single(squeeze(vars.Rsl)));
-    for outeriter=1:P.DCEparams.outeriter
-        res=CSL1NlCg_GPU(res,P.DCEparams,k_weighted,NufftOP,selectslice);
-    end
-    recon_cs(:,:,selectslice,:) = gather(res); 
+
+%     k_weighted=squeeze(double(vars.Ksl)).*permute(repmat(sqrt(P.wu),[1 1 1 nc]),[1 2 4 3]);
+
+%     res=(single(squeeze(vars.Rsl)));
+
+
+% to do: 
+% fix l1-norm (TV temp operator in 3D)
+P.DCEparams.lambda=10000;
+P.DCEparams.display=1;
+P.DCEparams.W=TV_Temp_3D();
+
+res=R2; %first-guess 
+
+y=kdatau;
+cc=create_checkerboard(size(kdatau,3));
+y=bsxfun(@times,y,permute(cc,[1 3 2])); 
+
+y=reshape(y,[],nc,nt);  % THIS SHOULD BE MOVED TO THE OPERATOR
+size(y)
+
+
+for outeriter=1:P.DCEparams.outeriter
+    res=CSL1NlCg_GPU(res,P.DCEparams,y,NUFFTOP);
 end
 
+recon_cs = gather(res);
+
+imagine(recon_cs)
+
+%{
 %% CLEAR CORR
 if P.clearcorr
 temp=1
@@ -281,7 +302,6 @@ save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 
 %}
-
 
 
 

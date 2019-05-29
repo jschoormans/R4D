@@ -26,7 +26,7 @@ end
 if isfield(P,'spokestoread')
 fprintf('first spoke %d, last spoke: %d',P.spokestoread(1),P.spokestoread(end))
 else
-    fprintf('all spokes used')
+    fprintf('all spokes used\n')
 end
     fprintf('Golden-angle Stack-of-Stars Finished!\n')
 diary off

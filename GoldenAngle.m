@@ -14,7 +14,7 @@ function [MR,P] = GoldenAngle(varargin);
 % P.sense_ref           %filename of sense_ref file
 % P.filename            %name used to save the recons
 
-% P.recontype           %'3D'; 'DCE'; '4D' ; '5D'(multiple echoes)  (standard:3D)
+% P.recontype           %'3D'; 'DCE'; 'DCE-2D'; 'DCE-CPU' (CPU); '4D' ; '5D'(multiple echoes)  (standard:3D)
 
 % P.sensitivitymaps     %1/0 use of sense maps for coil combinations (true)
 % P.sensitvitymapscalc  %way of calculating sensitivity maps: sense
@@ -59,13 +59,10 @@ disp(' \____/\___/|_|\__,_|\___|_| |_\_| |_/_| |_|\__, |_|\___|')
 disp('                                             __/ |       ')
 disp('                                            |___/        ')
 fprintf ('Golden-angle stack-of-stars reconstruction\n')
-fprintf('V1.2\n \n')
-fprintf('J Schoormans - AMC Amsterdam - Sept 2018\n')
+fprintf('V1.3\n \n')
+fprintf('J Schoormans - AMC Amsterdam - May 2019\n')
 disp('--------------------------------------------------------------')
-fprintf('Recommended MRecon version: 3.0.506 \n')
-fprintf('Your MRecon version: '); which MRecon
 fprintf(' \n')
-tic
 
 if nargin==0
     P=struct;
@@ -79,19 +76,21 @@ P=checkGAParams(P);
 P.reconID=[char(java.util.UUID.randomUUID)];
 
 % create temp folder to save data 
-P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
+P.foldertemp=[tempdir,filesep,'temp_',P.reconID];
 mkdir(P.foldertemp); 
+
+cleanupObj=onCleanup(@() CleanMeUp(P.foldertemp)); %function to run on completion/forced exit 
 
 
 switch P.recontype
     case '4D';  disp('4D reconstruction');
         [MR,P]=FullRecon_SoS_4D(P);
     case 'DCE'; disp('DCE reconstruction');
-        if P.DCEparams.GUI==false
-        [MR,P]=FullRecon_SoS_DCE(P); %run standard DCE recon with provided settings
-        else %run GUI to choose spokes/settings based on signal 
-        run DCE_inflow;     %TO DO: output MR,P from GUI
-        end
+        [MR,P]=FullRecon_SoS_DCE(P); %run standard DCE recon with provided settings        
+    case 'DCE-2D'; disp('DCE reconstruction');
+        [MR,P]=FullRecon_SoS_DCE_2D(P); %run standard DCE recon with provided settings        
+    case 'DCE-CPU'; disp('DCE reconstruction');
+        [MR,P]=FullRecon_SoS_DCE_old(P); %run standard DCE recon with provided settings        
     case '5D';  disp('5D reconstruction (multiple echoes)');
         [MR,P]=FullRecon_SoS_5D(P);
     case '3D';  disp('Performing full 3D golden angle stack-of-stars reconstruction...');
@@ -99,9 +98,19 @@ switch P.recontype
 end
 
 [MR,P] = SaveReconResults(MR,P); % SAVES THE TEXT FILE WITH PARAMETERS
-toc
+
+end
+
+
+function CleanMeUp(foldertemp)
+% cleans up data upon termination/execution
+fprintf('\nCleaning up temp folder and files...\n')
 
 % remove temp folder
-rmdir(P.foldertemp,'s');
+rmdir(foldertemp,'s');
 disp('--------------------------------------------------------------')
+
 end
+
+
+

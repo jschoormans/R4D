@@ -116,51 +116,48 @@ if ~isfield(P.espiritoptions,'nmaps')
 end
 
 % DCE RECONS
-if strcmp(P.recontype,'DCE')
-    if ~isfield(P,'DCEparams') %initialize DCE params field
-        P.DCEparams=struct();
-        error('five DCEparams in P.DCEparams')
-    end
-    if ~isfield(P.DCEparams,'nspokes')
-        error('specify number of spokes used for DCE frames! in P.DCEparams.nspokes')
-    elseif P.DCEparams.nspokes==[]
-        error('specify number of spokes used for DCE frames! in P.DCEparams.nspokes')
-    end
-    if ~isfield(P.DCEparams,'nite')
-        P.DCEparams.nite=8;
-    end
-    if ~isfield(P.DCEparams,'outeriter')
-        P.DCEparams.outeriter=4;
-    end
-    
-    if ~isfield(P.DCEparams,'Beta')
-        P.DCEparams.Beta='LS'
-    end
-    if ~isfield(P.DCEparams,'display')
-        P.DCEparams.display=1;
-    end
-    
-    P.DCEparams.W = TV_Temp();
-    
-    if ~isfield(P.DCEparams,'enableTGV')
-        P.DCEparams.enableTGV=0;
-    end
-    
-    if P.DCEparams.enableTGV==1
-    P.DCEparams.W2 = TV2_Temp();
-    end
-    
-    if ~isfield(P.DCEparams,'GUI')
-        P.DCEparams.GUI=false;
-    end
-    
-    if ~isfield(P.DCEparams,'lambdafactor')
-        P.DCEparams.lambdafactor=0.25;
-    end
-
-    
+if ~isfield(P,'DCEparams') %initialize DCE params field
+    P.DCEparams=struct();
+    error('five DCEparams in P.DCEparams')
+end
+if ~isfield(P.DCEparams,'nspokes')
+    error('specify number of spokes used for DCE frames! in P.DCEparams.nspokes')
+elseif P.DCEparams.nspokes==[]
+    error('specify number of spokes used for DCE frames! in P.DCEparams.nspokes')
+end
+if ~isfield(P.DCEparams,'nite')
+    P.DCEparams.nite=8;
+end
+if ~isfield(P.DCEparams,'outeriter')
+    P.DCEparams.outeriter=4;
 end
 
+if ~isfield(P.DCEparams,'Beta')
+    P.DCEparams.Beta='LS'
+end
+if ~isfield(P.DCEparams,'display')
+    P.DCEparams.display=1;
+end
+
+P.DCEparams.W = TV_Temp();
+
+if ~isfield(P.DCEparams,'enableTGV')
+    P.DCEparams.enableTGV=0;
+end
+
+if P.DCEparams.enableTGV==1
+    P.DCEparams.W2 = TV2_Temp();
+end
+
+if ~isfield(P.DCEparams,'GUI')
+    P.DCEparams.GUI=false;
+end
+
+if ~isfield(P.DCEparams,'lambdafactor')
+    P.DCEparams.lambdafactor=0.25;
+end
+
+    
 if ~isfield(P,'debug') 
     P.debug=0; %debug level 
 end

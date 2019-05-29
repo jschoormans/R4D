@@ -10,7 +10,7 @@ elseif length(s)==3
     ch1d=permute(ch1d,[1 3 2]);
     ch=bsxfun(@times,ch,ch1d);
 elseif length(s)==1
-    ch=(((-1).^[1:s(1)]).*1i).*(ones(1,s(1)).*-1i)
+    ch=(((-1).^[1:s(1)]).*1i).*(ones(1,s(1)).*-1i);
 else
     error('unsupported size')
 end

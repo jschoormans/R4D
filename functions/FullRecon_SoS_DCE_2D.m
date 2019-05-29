@@ -1,61 +1,10 @@
-% GPU RECON CAROTID
-% because the GoldenAngle has gotten too big/complicated, I only copy/paste
-% the relevant code here
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
-addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab_Collection/imagine'))
-addpath(genpath('/opt/amc/matlab/toolbox/MRecon'))
-%%
+function [MR,P]=FullRecon_SoS_DCE(P)
 
-clear all
-P=struct()
-P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
-P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
 
-%P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
-%P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
-
-%P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160615_Carotid/';
-% %P.file='20_15062016_1913278_8_2_wip3dimsdegoldenanglesenseV4.raw';
-% P.folder='/home/jschoormans/lood_storage/divi/Ima/parrec/jschoormans/carotid_DCE/2019_05_15/'
-% P.file='ca_15052019_1527087_4_2_carotid_dce_shortV4.raw'
-% P.file='ca_15052019_1535002_6_2_cdce-transvV4.raw'
-
-% P.spokestoread=[0:300]';
-% P.reconslices=[10];
-
-P.recontype='DCE'
-P.DCEparams.nspokes=37
-P.DCEparams.display=1;
-P.sensitvitymapscalc='openadapt' % 
-P.channelcompression=false;
-P.cc_nrofchans=6;
-
-P.DCEparams.Beta='FR';
-P.DCEparams.nite=8; % should be 8
-P.DCEparams.outeriter=10;
-P.DCEparams.display=0;
-
-P.enableTGV=1;
-P.GPU=1;
-P.clearcorr=1;
-P.DCEparams.lambdafactor=0.5;
-P.zerofill=1;
-
-%%
-tic 
-fprintf('\nCarotid DCE Reconstruction...\n\n')
-P=checkGAParams(P);
+fprintf('\nDCE Reconstruction - GPU based parallelized over slices\n\n')
 
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 [MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
-
-%create temp folder
-P.reconID=[char(java.util.UUID.randomUUID)];
-% create temp folder to save data 
-P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
-mkdir(P.foldertemp); 
 
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
@@ -178,7 +127,10 @@ nameP='temp_options_P.mat';
 save(nameP,'P');
 
 %clear kdatau R sens;
-
+addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
+addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
+addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
+addpath(genpath('/opt/amc/matlab/toolbox/MRecon/'))
 %%  L1 minimization algorithm (NLCG)
 
 for selectslice=P.reconslices;
@@ -217,7 +169,7 @@ if P.zerofill
     description='GRASP';
     cd(P.resultsfolder)
     nii=make_nii(squeeze(abs(flip((permute(recon_cs_interp(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
-    save_nii(nii,strcat(P.filename,'interp','.nii'))
+    save_nii(nii,strcat(P.filename,'_interp','.nii'))
     
 end
 
@@ -226,27 +178,9 @@ end
 description='GRASP';
 cd(P.resultsfolder)
 nii=make_nii(squeeze(abs(flip((permute(recon_cs(:,:,:,:),[2 1 3 4]))))),P.voxelsize,[],[],description);
-save_nii(nii,strcat(P.filename,'CS','.nii'))
+save_nii(nii,strcat(P.filename,'.nii'))
 
 fprintf('Finished\n')
 
 
-[MR,P] = SaveReconResults(MR,P); % SAVES THE TEXT FILE WITH PARAMETERS
-
-%% remove temp folder
-rmdir(P.foldertemp,'s');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+end

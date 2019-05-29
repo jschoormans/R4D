@@ -94,7 +94,7 @@ while(1)
 
     % print some numbers
     if param.display,
-        fprintf(' ite = %d, cost = %f |lsiter= %f|change=%f \n',k,f1,lsiter,change(k+1));
+        fprintf(' ite = %d, cost = %5.2e (l1=%5.2f/l2=%5.2f) |lsiter= %i|change=%5.2f \n',k,f1,(L1Obj*param.lambda)/f1,L2Obj/f1, lsiter,change(k+1));
         %{
         figure(100);
         subplot(1,2,1)

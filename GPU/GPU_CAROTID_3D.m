@@ -10,11 +10,6 @@ clear all
 P=struct()
 P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
 P.file='20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
-P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp'
-% 
-% P.folder='/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160705_CarotidDCE/'
-% P.file='20_06072016_1302465_6_2_wip3d07mmradialtestsenseV4.raw'
-
 
 %P.spokestoread=[0:300]';
 P.recontype='DCE'
@@ -23,9 +18,8 @@ P.DCEparams.display=1;
 P.sensitvitymapscalc='openadapt' % 
 P.channelcompression=false;
 P.cc_nrofchans=3;
-P.filename='recon_GPU_dev'
 
-P.DCEparams.Beta='FR'
+P.DCEparams.Beta='FR';
 P.DCEparams.nite=8 % should be 8
 P.DCEparams.outeriter=5
 P.DCEparams.display=0
@@ -33,13 +27,11 @@ P.DCEparams.display=0
 P.enableTGV=1
 P.GPU=1
 
+P.DCEparams.lambda=1000;
+P.DCEparams.display=1;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%create temp folder
-P.reconID=[char(java.util.UUID.randomUUID)];
-% create temp folder to save data 
-P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
-mkdir(P.foldertemp); 
+P.filename=['recon_3d_GPU_lambda',num2str(P.DCEparams.lambda)]
+
 
 %%
 tic 
@@ -49,6 +41,13 @@ P=checkGAParams(P);
 
 MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 [MR,P] = UpdateReadParamsMR(MR,P);  %update read paramters based on MR object params
+
+%create temp folder
+P.reconID=[char(java.util.UUID.randomUUID)];
+% create temp folder to save data 
+P.foldertemp=[P.resultsfolder,filesep,'temp_',P.reconID];
+mkdir(P.foldertemp); 
+
 
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
@@ -127,21 +126,7 @@ toc
 % kdatau=kdatau(:,:,slices_to_keep,:,:);
 
 fprintf('\nsorting into timeframes...');toc
-%% get first guess
 
-
-kdatau2d=ifft(kdatau,[],3); 
-tic
-disp('First guess')
-for selectslice=P.reconslices       % sort the data into a time-series
-    fprintf('%d - ',selectslice)
-    tempy=squeeze(double(kdatau(:,:,selectslice,:,:))).*permute(repmat(sqrt(wu(:,:,:)),[1 1 1 nc]),[1 2 4 3]);
-    
-    NUFFTOP=GPUNUFFTT(ku(:,:,:),sqrt(wu(:,:,:)),squeeze(sens(:,:,selectslice,:)));
-    R(:,:,selectslice,:)=(NUFFTOP'*tempy); %first guess
-end
-R(isnan(R))=0;
-fprintf('\nFirst Guess...');toc
 
 %% FIrst Guess - 3D operator case
 
@@ -194,64 +179,16 @@ tic
 R2=(NUFFTOP'*y); %first guess
 disp('3D NUFFT TIME:'),toc
 
-imagine(R,'Name','2d',R2,'Name','3D')
-
-
-%%
-
-
-
 %% some parameters that are needed during recon/saving
 
 P.DCEparams.lambda = double(P.DCEparams.lambdafactor*max(abs(R2(:))));  %regularization
 P.voxelsize=MR.Parameter.Scan.AcqVoxelSize;
 
-%% write big files to temporary folder
-%{
-fprintf('\nWriting temporary files:')
-cd(P.foldertemp)
 
-for sl=P.reconslices
-    fprintf('%i - ',sl)
-    name=['temp_data_slice_',num2str(sl),'.mat'];
-    Ksl=kdatau(:,:,sl,:,:);
-    Rsl=R(:,:,sl,:);
-    senssl=sens(:,:,sl,:);
-    save(name,'Ksl','Rsl','senssl')
-end
-fprintf('\n Finished \n')
-
-
-% save general options
-cd(P.foldertemp)
-nameP='temp_options_P.mat';
-save(nameP,'P');
-
-%clear kdatau R sens;
-%}
 %%  L1 minimization algorithm (NLCG)
 
 fprintf('\n GRASP reconstruction (3D on GPU) \n')
-% 
-%     % load relevant data
-%     cd(P.foldertemp)
-%     name=['temp_data_slice_',num2str(selectslice),'.mat'];
-%     vars=load(name);
-    
-    
-%     NufftOP=GPUNUFFTT(P.ku,sqrt(P.wu),double(squeeze(vars.senssl)));
-    
 
-
-%     k_weighted=squeeze(double(vars.Ksl)).*permute(repmat(sqrt(P.wu),[1 1 1 nc]),[1 2 4 3]);
-
-%     res=(single(squeeze(vars.Rsl)));
-
-
-% to do: 
-% fix l1-norm (TV temp operator in 3D)
-P.DCEparams.lambda=10000;
-P.DCEparams.display=1;
 P.DCEparams.W=TV_Temp_3D();
 
 res=R2; %first-guess 
@@ -272,14 +209,10 @@ recon_cs = gather(res);
 
 imagine(recon_cs)
 
-%{
+
 %% CLEAR CORR
 if P.clearcorr
-temp=1
-clearmap=sum(abs(senssl),4).^1;
-reconCLEAR1=bsxfun(@times,recon_cs(:,:,10,:),clearmap);
-size(reconCLEAR1)
-imshow(abs(reconCLEAR1(:,:,1,1)),[])
+% TO DO... ? 
 end
 %% save as nifiti...
 
@@ -292,18 +225,6 @@ save_nii(nii,strcat(P.filename,'CS_N_FR','.nii'))
 
 %% remove temp folder
 %rmdir(P.foldertemp,'s');
-
-
-
-
-
-
-
-
-
-%}
-
-
 
 
 

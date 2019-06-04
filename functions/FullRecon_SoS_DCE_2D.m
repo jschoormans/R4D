@@ -10,29 +10,13 @@ MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
 MR.PhaseShift;
 MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
-fprintf('\nloading data...');toc
+fprintf('\nloading data...')
 %%
 tic 
 [nx,ntviews,ny,nc]=size(MR.Data);
 k=buildRadTraj2D(nx,ntviews,false,true,true,[],[],[],[],P.goldenangle);
 fprintf('building trajectory...');toc
 
-%%
-tic
-MRn=MR.Copy; MRn.Parameter.Parameter2Read.typ=5;
-MRn.Parameter.Parameter2Read.echo=0;
-MRn.ReadData;
-P.eta=MRn.Data;
-
-sizeMRDATA=size(MR.Data);
-Ncoils=size(MR.Data,4);
-Nsamples=numel(MR.Data)/Ncoils;
-data=reshape(MR.Data,[Nsamples,Ncoils]);
-data=data.';
-
-psi = (1/(Nsamples-1))*(P.eta' * P.eta);
-
-fprintf('\ncalculate noise correlation matrix...');toc
 %% openadapt sense maps 
 tic
 res=MR.Parameter.Encoding.XReconRes;
@@ -47,14 +31,39 @@ tic
 for selectslice=P.reconslices       % sort the data into a time-series
     fprintf('%d - ',selectslice)
     for selectcoil=[1:size(kdata,4)]
-        zerofill(:,:,selectslice,selectcoil)=NUFFTOP'*double(kdata(:,:,selectslice,selectcoil));
+        zerofill(:,:,selectslice,selectcoil)=NUFFTOP'*double(weighted_data(:,:,selectslice,selectcoil));
     end
 end
 toc
 
-zerofill=permute(zerofill,[4 1 2 3]); 
-[~, ~, sens] = openadapt(zerofill,1,psi); % not sure about psi though
+zerofill=permute(zerofill,[4 1 2 3]);
+
+
+if ~P.channelcompression
+    tic
+    MRn=MR.Copy; MRn.Parameter.Parameter2Read.typ=5;
+    MRn.Parameter.Parameter2Read.echo=0;
+    MRn.ReadData;
+    P.eta=MRn.Data;
+    
+    sizeMRDATA=size(MR.Data);
+    Ncoils=size(MR.Data,4);
+    Nsamples=numel(MR.Data)/Ncoils;
+    data=reshape(MR.Data,[Nsamples,Ncoils]);
+    data=data.';
+    
+    psi = (1/(Nsamples-1))*(P.eta' * P.eta);
+    
+    fprintf('\ncalculate noise correlation matrix...');toc
+    [~, ~, sens] = openadapt(zerofill,1,psi); % not sure about psi though
+else
+    [~, ~, sens] = openadapt(zerofill,1); % not sure about psi though
+end
+
+%scaling and permuting...
 sens=permute(sens,[2 3 4 1]);
+img_sens_sos = sqrt(sum(abs(sens).^2,4));
+sens = sens./repmat(img_sens_sos,[1,1,1,nc]);
 
 fprintf('\nopenadapt sense maps...');toc
 %% sorting into timeframes; Remove oversampling in z-direction

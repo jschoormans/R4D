@@ -1,0 +1,70 @@
+
+P = 
+
+  <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a> with fields:
+
+                folder: '/home/jschoormans/lood_storage/divi/Projects/cosart/scans/FEM/20160803_CarotisDCE_FlipAngle15/'
+                  file: '20_03082016_1524321_5_2_wip3dradialdcesenseV4.raw'
+         resultsfolder: '/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp'
+             recontype: 'DCE'
+             DCEparams: [1×1 struct]
+    sensitvitymapscalc: 'openadapt'
+    channelcompression: 0
+          cc_nrofchans: 3
+              filename: 'recon_GPU_dev'
+             enableTGV: 1
+                   GPU: 1
+               reconID: 'd5d4a2ba-bc65-4482-b422-b222fdfcd931'
+            foldertemp: '/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Examples/temp/temp_d5d4a2ba-bc65-4482-b422-b222fdfcd931'
+              zerofill: 1
+       sensitivitymaps: 1
+                    CS: [1×1 struct]
+             oneTEtemp: 0
+        espiritoptions: [1×1 struct]
+                 debug: 0
+             prewhiten: 0
+                saveMR: 0
+              reloadMR: 0
+             clearcorr: 0
+           goldenangle: 18.7148
+       reconresolution: [51 51 206]
+           reconslices: [1×50 double]
+                   eta: [19968×8 single]
+             voxelsize: [0.6923 0.6923 0.7000]
+
+DCE options:
+
+ans = 
+
+  <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a> with fields:
+
+           nspokes: 37
+           display: 1
+              Beta: 'FR'
+              nite: 8
+         outeriter: 5
+                 W: [1×1 TV_Temp_3D]
+         enableTGV: 0
+               GUI: 0
+      lambdafactor: 0.2500
+    TimeResolution: 21.9877
+            lambda: 10000
+
+CS options:
+
+ans = 
+
+  <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a> with fields:
+
+    iter: 250
+     reg: 0.0020
+
+espirit options:
+
+ans = 
+
+  <a href="matlab:helpPopup struct" style="font-weight:bold">struct</a> with fields:
+
+    nmaps: 1
+
+all spokes usedGolden-angle Stack-of-Stars Finished!

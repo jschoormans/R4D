@@ -42,6 +42,6 @@ mkdir(PathNameNifti,resultsfoldername)
 
 disp('ready to convert: press a key to continue');% pause; 
 disp('starting...')
-toDicom_jan19(I,metadata,MR,timeresolution,resultsfolder)
+toDicom_jul19(I,metadata,MR,timeresolution,resultsfolder)
 
 disp('Finished!')

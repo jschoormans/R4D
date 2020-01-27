@@ -4,7 +4,9 @@
 % jasper.schoormans@gmail.com
 
 %%%%%%%%%%%%%%%%%%%%% add relevant folders
-init_paths
+addpath(genpath('/scratch/jschoormans/R4D'))
+addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
+addpath(genpath('/opt/amc/matlab/toolbox/MRecon-3.0.556/'))
 %%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%% Load file locations
@@ -14,23 +16,25 @@ load('filelocations.mat') %filenames an dpaths of AAA DCE scans --> of note. A f
 %%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%% LOOP OVER OPTIONS/SCANS
-for study_nr=21:26
-    for session_nr=1:2
+for study_nr=19
+    for session_nr=1
         try
-            for lambdafac=[10]
+            for lambdafac=[1e-8]
                 
                 % specify DCE recon options
                 P=struct();
+                P.reconslices = 20
+                
                 P.folder=[F{study_nr,session_nr}.path,filesep];
                 P.file=F{study_nr,session_nr}.name;
-                P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/aaa/MRI/DCE recons/recons_29may';
+                P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/DCE_PAPER/lambdafactor_plot/AAA';
                 
                 P.recontype='DCE-2D';
                 P.DCEparams.nspokes=34;
                 P.DCEparams.display=1;
                 P.sensitvitymapscalc='openadapt';
                 P.channelcompression=true;
-                P.cc_nrofchans=5;
+                P.cc_nrofchans=6;
                 %             P.reconslices=(20);
                 P.zerofill=0; % save zero-filled nii (double recon res.)
                 

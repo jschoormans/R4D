@@ -1,0 +1,5 @@
+fprintf('Adding relevant paths for R4D recons...\n')
+addpath(genpath('/scratch/jschoormans/R4D'))
+addpath(genpath('/opt/amc/matlab/toolbox/MRecon'))
+addpath(genpath('/opt/amc/matlab/toolbox/MRecon'))
+addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))

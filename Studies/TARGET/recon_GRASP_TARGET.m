@@ -14,7 +14,7 @@ addpath(genpath('/opt/amc/matlab/toolbox/MRecon-3.0.556/'))
 %%
 clear all; close all; clc;
 
-for iters=[7,8,9,1]
+for iters=[2]
 
     P=struct
     
@@ -88,12 +88,12 @@ P.binparams.visualize =1;
 % P.reconslices=[10:20]%
 
 P.resultsfolder=[P.folder,'ResultsNew'];
-P.filename=['tagret2_openadapt_34sp_500']
-P.recontype='DCE'
+P.filename=['tagret2_openadapt_34sp_500_CPU']
+P.recontype='DCE-CPU'
 P.DCEparams.nspokes=34; %34 %(2,3,5,8,13,21,34,...)
 P.DCEparams.display=1;
 P.sensitvitymapscalc='sense2' % sense2 
-P.channelcompression=false;
+P.channelcompression=true;
 P.cc_nrofchans=6;
 
 P.DCEparams.Beta='FR'

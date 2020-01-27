@@ -22,7 +22,6 @@ else
     %     P.folder='/home/jschoormans/lood_storage/divi/Ima/parrec/Pauldh/2018-09-04_DCE_knie_grasp/'
 end
 P.file='fe_17102016_2102133_18_2_wip3ddcefemtrasenseV4.raw'
-
 P.coil_survey='fe_17102016_2101366_1000_23_wipcoilsurveyscanV4.raw'
 P.sense_ref='fe_17102016_2101584_1000_26_wipsenserefscanclearV4.raw' 
 

@@ -1,4 +1,4 @@
-function [MR,P]=FullRecon_SoS_DCE(P)
+function [MR,P]=FullRecon_SoS_DCE_2D(P)
 
 
 fprintf('\nDCE Reconstruction - GPU based parallelized over slices\n\n')
@@ -9,7 +9,6 @@ MR=GoldenAngle_Recon(strcat(P.folder,P.file)); %initialize MR object
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
 MR.PhaseShift;
-MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
 fprintf('\nloading data...')
 %%
 tic 
@@ -22,6 +21,12 @@ tic
 res=MR.Parameter.Encoding.XReconRes;
 
 kdata=squeeze(MR.Data); %select kdata for slice
+if P.HammingFilterZeroFill
+    H1 = hamming(size(kdata,3)).^5;
+    kdata = bsxfun(@times, kdata, permute(H1,[2 3 1]));
+end
+kdata = ifft(kdata,[],3);
+
 w=getRadWeightsGA(k);
 weighted_data=bsxfun(@times,kdata,sqrt(w));
 NUFFTOP=NUFFT(k,sqrt(w),1,0,[res res],2);
@@ -31,7 +36,19 @@ tic
 for selectslice=P.reconslices       % sort the data into a time-series
     fprintf('%d - ',selectslice)
     for selectcoil=[1:size(kdata,4)]
-        zerofill(:,:,selectslice,selectcoil)=NUFFTOP'*double(weighted_data(:,:,selectslice,selectcoil));
+        
+        if ~P.HammingFilterZeroFill
+            zerofill(:,:,selectslice,selectcoil)=NUFFTOP'*double(weighted_data(:,:,selectslice,selectcoil));
+        else
+            % lower effective resolution of ZF recon (to fix issues with
+            % openadapt)
+            H1 = hamming(size(weighted_data,1)).^5;
+            
+            tempfilter = repmat(H1,[1 size(weighted_data,2)]); 
+            zerofill(:,:,selectslice,selectcoil)=...
+            NUFFTOP'*(tempfilter.*double(weighted_data(:,:,selectslice,selectcoil)));
+
+        end
     end
 end
 toc
@@ -55,9 +72,9 @@ if ~P.channelcompression
     psi = (1/(Nsamples-1))*(P.eta' * P.eta);
     
     fprintf('\ncalculate noise correlation matrix...');toc
-    [~, ~, sens] = openadapt(zerofill,1,psi); % not sure about psi though
+    [~, ~, sens] = openadapt(zerofill,1,psi,[],1); % not sure about psi though
 else
-    [~, ~, sens] = openadapt(zerofill,1); % not sure about psi though
+    [~, ~, sens] = openadapt(zerofill,1,[],[],1); % not sure about psi though
 end
 
 %scaling and permuting...
@@ -69,6 +86,7 @@ fprintf('\nopenadapt sense maps...');toc
 %% sorting into timeframes; Remove oversampling in z-direction
 tic
 %%%SORTING
+MR.Data=ifft(MR.Data,[],3);         %eventually: remove slice oversampling
 kdata=squeeze(MR.Data(:,:,:,:,1)); %select kdata for slice
 nt=floor(ntviews/P.DCEparams.nspokes);              % calculate (max) number of frames
 kdatac=kdata(:,1:nt*P.DCEparams.nspokes,:,:);       % crop the data according to the number of spokes per frame
@@ -164,7 +182,7 @@ end
 %% CLEAR CORR
 if P.clearcorr
     fprintf('clear correction...\n')
-    clearmap=sum(abs(sens),4).^1;
+    clearmap=sum(abs(sens),4).^2;
     recon_cs=bsxfun(@times,recon_cs,clearmap);
 end
 

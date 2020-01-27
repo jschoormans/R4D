@@ -18,7 +18,7 @@ P.folder=F{5,1}.path;
 P.file=F{5,1}.name;
 P.DCEparams=struct();
 P.DCEparams.nspokes=12;
-P.channelcompression=true;
+P.channelcompression=false;
 P.cc_nrofchans=5
 P.spokestoread=[0:300].'
 
@@ -30,7 +30,6 @@ MR=GoldenAngle_Recon([F{5,1}.path,filesep,F{5,1}.name]); %initialize MR object
 
 
 %%%%%%%%%%%%%%%%%%%%
-tic
 MR.Perform1;                        %reading and sorting data
 MR.CalculateAngles;
 MR.PhaseShift;
@@ -141,6 +140,23 @@ gating_params.PCAfreqband=[0.1 1]
 
 
 [gating_signal2,W] = PCA_gating_signal(MR.Data,gating_params)
+
+
+%% new method...
+
+figure(100);
+for ii=1:5
+    subplot(5,1,ii);
+    S(ii,:,:)=MR.Data(352,:,:,ii);
+    imshow(squeeze(abs(S(ii,:,:))).',[]);
+    coeff(ii,:,:)=pca(squeeze(S(ii,:,:)))
+
+end
+
+% PCA on these...
+
+figure(101)
+plot(squeeze(coeff(1,:,:))
 
 
 

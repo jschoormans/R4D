@@ -104,7 +104,14 @@ kGPU=single(kGPU);
 k_all=repmat(kGPU,[1 1 ny]);
 k_all=reshape(k_all,3,[]);
 
-k_all_z=[MR.Parameter.Labels.KzRange(1):MR.Parameter.Labels.KzRange(2)]/ny;
+k_all_z=[-MR.Parameter.Labels.KzRange(2)-1:MR.Parameter.Labels.KzRange(2)]/ny;
+
+if length([-MR.Parameter.Labels.KzRange(2)-1:MR.Parameter.Labels.KzRange(2)]) == ny+1
+    k_all_z = k_all_z(2:end); 
+    % sometimes the data has one fewer kpoint in z than expected
+    % in that case remove the lowest kz 
+end
+
 k_all_z=repmat(k_all_z,[numel(ku(:,:,ii)) 1]);
 k_all_z=k_all_z(:); 
 k_all(3,:)=k_all_z;

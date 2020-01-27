@@ -1,16 +1,12 @@
 % 3D Gridding of AAA data experiments...
 
 %%%%%%%%%%%%%%%%%%%%% add relevant folders
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
-addpath(genpath('/home/jschoormans/toolbox/gpuNUFFT'))
-addpath(genpath('/opt/amc/matlab/toolbox/MRecon/'))
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab_Collection/imagine'))
+init_paths
 %%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%% Load file locations
 clear
-cd('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/Studies/AAA')
+cd('/scratch/jschoormans/R4D/General_Code/Studies/AAA')
 load('filelocations.mat') %filenames an dpaths of AAA DCE scans --> of note. A few sessions seem to have two DCE scans - ask what's up with that
 %%%%%%%%%%%%%%%%%%%%
 
@@ -144,6 +140,25 @@ gating_params.PCAfreqband=[0.1 1]
 
 
 [gating_signal2,W] = PCA_gating_signal(MR.Data,gating_params)
+
+
+%% new method...
+
+figure(100);
+for ii=1:5
+    subplot(5,1,ii);
+    S(ii,:,:)=MR.Data(352,:,:,ii);
+    imshow(squeeze(abs(S(ii,:,:))).',[]);
+    coeff(ii,:,:)=pca(squeeze((S(ii,:,:))))
+
+end
+
+% PCA on these...
+
+figure(101)
+plot(abs(squeeze(coeff(:,:,1))).')
+figure(102)
+plot(abs(squeeze(coeff(:,:,4))).')
 
 
 

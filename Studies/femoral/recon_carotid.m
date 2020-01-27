@@ -2,12 +2,7 @@
 % addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
 % addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes'))
 
-addpath(('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code'))
-addpath(genpath('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/General_Code/functions'))
-addpath(('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes/Adaptive'))
-addpath(('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes/nufft_files'))
-addpath(('/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/OtherToolboxes/nifti'))
-
+% init_paths
 %%
 
 P=struct()
@@ -22,21 +17,21 @@ P.resultsfolder='/home/jschoormans/lood_storage/divi/Projects/cosart/Matlab/R4D/
 
 P.binparams.visualize =1;
 % P.spokestoread=[0:300]';
-P.reconslices=[9]
+% P.reconslices=[9]
 
 P.resultsfolder=[P.folder,'Results'];
 P.recontype='DCE-2D'
-P.DCEparams.nspokes=37
+P.DCEparams.nspokes=29
 P.DCEparams.display=1;
 P.sensitvitymapscalc='openadapt' % 
 P.channelcompression=false;
 P.cc_nrofchans=6;
-P.filename='recon_GPU_dev'
+P.filename='recon'
 
 P.DCEparams.Beta='FR'
 P.DCEparams.nite=8 % should be 8
 P.DCEparams.outeriter=5
-P.DCEparams.display=0
+P.DCEparams.display=1
 
 P.enableTGV=1
 P.GPU=1
